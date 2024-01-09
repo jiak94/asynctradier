@@ -330,7 +330,7 @@ class TradierClient:
 
         if len(param) == 0:
             raise InvalidParameter("No parameters to modify")
-        response = await self.session.put(url, param)
+        response = await self.session.put(url, data=param)
         order = response["order"]
         return Order(
             **order,
