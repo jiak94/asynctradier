@@ -1,35 +1,41 @@
+"""
+This module defines the Order class, which represents an order in a trading system.
+"""
 from asynctradier.common import Duration, OptionOrderSide, OrderClass, OrderType
-
-"""
-example:
-{
-    "id": 228749,
-    "type": "market",
-    "symbol": "SPY",
-    "side": "buy_to_open",
-    "quantity": 1.00000000,
-    "status": "expired",
-    "duration": "pre",
-    "avg_fill_price": 0.00000000,
-    "exec_quantity": 0.00000000,
-    "last_fill_price": 0.00000000,
-    "last_fill_quantity": 0.00000000,
-    "remaining_quantity": 0.00000000,
-    "create_date": "2018-06-06T20:16:17.342Z",
-    "transaction_date": "2018-06-06T20:16:17.357Z",
-    "class": "option",
-    "option_symbol": "SPY180720C00274000"
-},
-"""
 
 
 class Order:
+    """
+    Represent an Order object.
+
+    Args:
+        **kwargs: Additional keyword arguments representing the order attributes.
+
+    Attributes:
+        id (int): The ID of the order.
+        type (OrderType): The type of the order.
+        symbol (str): The symbol of the order.
+        side (OptionOrderSide): The side of the order.
+        quantity (float): The quantity of the order.
+        status (str): The status of the order.
+        duration (Duration): The duration of the order.
+        avg_fill_price (float): The average fill price of the order.
+        exec_quantity (float): The executed quantity of the order.
+        last_fill_price (float): The last fill price of the order.
+        last_fill_quantity (float): The last fill quantity of the order.
+        remaining_quantity (float): The remaining quantity of the order.
+        create_date (str): The creation date of the order.
+        transaction_date (str): The transaction date of the order.
+        class_ (OrderClass): The class of the order.
+        option_symbol (str): The option symbol of the order.
+    """
+
     def __init__(
         self,
-        id: int,
         **kwargs,
     ) -> None:
-        self.id = id
+        assert kwargs.get("id", None) is not None
+        self.id = kwargs["id"]
         self.type = OrderType(kwargs["type"]) if kwargs.get("type", None) else None
         self.symbol = kwargs.get("symbol", None)
         self.side = (
@@ -51,6 +57,12 @@ class Order:
         self.option_symbol = kwargs.get("option_symbol", None)
 
     def __str__(self) -> str:
+        """
+        Return a string representation of the Order object.
+
+        Returns:
+            str: A string representation of the Order object.
+        """
         return (
             f"Order(id={self.id}, type={self.type}, symbol={self.symbol}, "
             f"side={self.side}, quantity={self.quantity}, status={self.status}, "

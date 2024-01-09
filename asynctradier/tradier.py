@@ -255,7 +255,7 @@ class TradierClient:
         """
         Get a list of orders for the account.
 
-        Args:
+        Parameters:
             page (int, optional): The page number of the orders to retrieve. Defaults to 1.
 
         Returns:
