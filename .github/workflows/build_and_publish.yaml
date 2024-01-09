@@ -20,6 +20,9 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
+      - name: Run tests
+        run: poetry run pytest
+
       - name: Config PIPY
         run: poetry config pypi-token.pypi ${{ secrets.PIPY_TOKEN }}
 
