@@ -8,6 +8,14 @@ Async api wrapper for [Tradier](https://documentation.tradier.com/).
 
 This is _NOT_ an official package of Tradier.
 
+## Install
+
+`pip install asynctradier`
+
+if your are using poetry
+
+`poetry add asynctradier`
+
 ## Supported API
 
 ### Account
