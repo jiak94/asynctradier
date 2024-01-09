@@ -1,5 +1,9 @@
 # asynctradier
 
+[![codecov](https://codecov.io/gh/jiak94/asynctradier/graph/badge.svg?token=T66WaJLNDd)](https://codecov.io/gh/jiak94/asynctradier)
+[![PyPI version](https://badge.fury.io/py/asynctradier.svg)](https://badge.fury.io/py/asynctradier)
+![Test](https://github.com/jiak94/asynctradier/actions/workflows/run_test.yaml/badge.svg)
+
 Async api wrapper for [Tradier](https://documentation.tradier.com/).
 
 This is _NOT_ an official package of Tradier.
