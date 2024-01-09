@@ -3,6 +3,7 @@
 [![codecov](https://codecov.io/gh/jiak94/asynctradier/graph/badge.svg?token=T66WaJLNDd)](https://codecov.io/gh/jiak94/asynctradier)
 [![PyPI version](https://badge.fury.io/py/asynctradier.svg)](https://badge.fury.io/py/asynctradier)
 ![Test](https://github.com/jiak94/asynctradier/actions/workflows/run_test.yaml/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/asynctradier/badge/?version=latest)](https://asynctradier.readthedocs.io/en/latest/?badge=latest)
 
 Async api wrapper for [Tradier](https://documentation.tradier.com/).
 
@@ -15,6 +16,10 @@ This is _NOT_ an official package of Tradier.
 if your are using poetry
 
 `poetry add asynctradier`
+
+## Documentation
+
+[Read The Doc](https://asynctradier.readthedocs.io/en/latest/)
 
 ## Supported API
 
