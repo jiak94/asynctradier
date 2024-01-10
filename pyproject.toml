@@ -28,7 +28,6 @@ m2r2 = "^0.3.3.post2"
 enable = true
 style = "semver"
 vcs = "git"
-format = "v{base}"
 
 [build-system]
 build-backend = "poetry_dynamic_versioning.backend"
