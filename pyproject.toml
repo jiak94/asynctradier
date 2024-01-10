@@ -4,7 +4,7 @@ description = "Async api wrapper for [Tradier](https://documentation.tradier.com
 name = "asynctradier"
 packages = [{include = "asynctradier"}]
 readme = "README.md"
-version = "0.0.1beta7"
+version = "0.0.0"
 
 [tool.poetry.dependencies]
 aiohttp = "^3.9.1"
@@ -28,6 +28,7 @@ m2r2 = "^0.3.3.post2"
 enable = true
 style = "semver"
 vcs = "git"
+format = "v{base}"
 
 [build-system]
 build-backend = "poetry_dynamic_versioning.backend"
