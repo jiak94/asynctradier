@@ -17,6 +17,9 @@ jobs:
       - uses: abatilo/actions-poetry@v2
         with:
           poetry-version: "1.3.2"
+      - name: Add Poetry Plugins
+        run: |
+          poetry self add poetry-dynamic-versioning[plugin]
       - name: Install dependencies
         run: poetry install
 
