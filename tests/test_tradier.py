@@ -2,7 +2,8 @@ from unittest.mock import call
 
 import pytest
 
-from asynctradier.common import Duration, OrderType
+from asynctradier.common import Duration, OptionOrderSide, OrderType
+from asynctradier.common.option_contract import OptionContract
 from asynctradier.tradier import TradierClient
 
 
@@ -387,5 +388,61 @@ async def test_modify_order(mocker, tradier_client):
         data={
             "type": "limit",
             "price": 1.0,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_multileg(mocker, tradier_client):
+    def mock_post(path: str, params: dict = None, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+
+    contracts = [
+        OptionContract(
+            "SPY",
+            "2019-03-29",
+            274.00,
+            "call",
+            OptionOrderSide.buy_to_open,
+            1,
+        ),
+        OptionContract(
+            "SPY",
+            "2019-03-29",
+            270.00,
+            "put",
+            OptionOrderSide.buy_to_open,
+            1,
+        ),
+    ]
+
+    await tradier_client.multileg(
+        symbol="SPY",
+        order_type=OrderType.market,
+        duration=Duration.good_till_cancel,
+        legs=contracts,
+    )
+
+    tradier_client.session.post.assert_called_with(
+        "/v1/accounts/account_id/orders",
+        data={
+            "class": "multileg",
+            "symbol": "SPY",
+            "type": "market",
+            "duration": "gtc",
+            "option_symbol[0]": "SPY190329C00274000",
+            "side[0]": "buy_to_open",
+            "quantity[0]": "1",
+            "option_symbol[1]": "SPY190329P00270000",
+            "side[1]": "buy_to_open",
+            "quantity[1]": "1",
         },
     )

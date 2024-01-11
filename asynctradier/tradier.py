@@ -4,6 +4,7 @@ from typing import List, Optional
 import websockets
 
 from asynctradier.common import Duration, OptionOrderSide, OrderClass, OrderType
+from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.position import Position
 from asynctradier.exceptions import (
@@ -237,12 +238,15 @@ class TradierClient:
             **order,
         )
 
-    async def cancel_order(self, order_id: str | int) -> None:
+    async def cancel_order(self, order_id: str | int) -> Order:
         """
         Cancel an order by its ID.
 
         Args:
             order_id (str | int): The ID of the order.
+
+        Returns:
+            Order: The Order object.
         """
         url = f"/v1/accounts/{self.account_id}/orders/{order_id}"
         response = await self.session.delete(url)
@@ -306,7 +310,7 @@ class TradierClient:
         order_duration: Optional[Duration] = None,
         price: Optional[float] = None,
         stop: Optional[float] = None,
-    ) -> None:
+    ) -> Order:
         """
         Modify an order by its ID.
 
@@ -316,6 +320,9 @@ class TradierClient:
             order_duration (Duration, optional): The new duration of the order. Defaults to None.
             price (float, optional): The new price for the order. Defaults to None.
             stop (float, optional): The new stop price for the order. Defaults to None.
+
+        Returns:
+            Order: The Order object.
         """
         url = f"/v1/accounts/{self.account_id}/orders/{order_id}"
         param = {}
@@ -378,3 +385,53 @@ class TradierClient:
                         yield await self.get_order(order_id)
                     else:
                         yield response
+
+    async def multileg(
+        self,
+        symbol: str,
+        order_type: OrderType,
+        duration: Duration,
+        legs: List[OptionContract],
+        price: Optional[float] = None,
+    ) -> Order:
+        """
+        Executes a multileg order.
+
+        Args:
+            symbol (str): The symbol of the order.
+            order_type (OrderType): The type of the order.
+            duration (Duration): The duration of the order.
+            legs (List[OptionContract]): The list of option contracts for the multileg order.
+            price (Optional[float]): The price of the order (required for spread orders).
+
+        Returns:
+            Order: The executed order.
+
+        Raises:
+            MissingRequiredParameter: If price is not specified for spread orders.
+        """
+
+        url = f"/v1/accounts/{self.account_id}/orders"
+        body = {}
+        if order_type == OrderType.debit or order_type == OrderType.credit:
+            if price is None:
+                raise MissingRequiredParameter(
+                    "Price must be specified for spread orders"
+                )
+            body["price"] = price
+
+        body["class"] = OrderClass.multileg.value
+        body["symbol"] = symbol
+        body["type"] = order_type.value
+        body["duration"] = duration.value
+
+        for i, leg in enumerate(legs):
+            body[f"option_symbol[{i}]"] = leg.option_symbol
+            body[f"quantity[{i}]"] = str(leg.quantity)
+            body[f"side[{i}]"] = leg.order_side.value
+
+        response = await self.session.post(url, data=body)
+        order = response["order"]
+        return Order(
+            **order,
+        )

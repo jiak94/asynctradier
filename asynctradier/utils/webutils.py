@@ -52,9 +52,7 @@ class WebUtil:
                 response = await resp.json()
 
                 if "errors" in response:
-                    raise BadRequestException(
-                        400, response["errors"]["error"]["description"]
-                    )
+                    raise BadRequestException(400, response["errors"]["error"])
                 return response
 
     async def get(self, path: str, params: dict = None):
