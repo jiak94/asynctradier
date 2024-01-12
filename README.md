@@ -26,41 +26,67 @@ if your are using poetry
 ### Account
 
 :white_square_button: Get User Profile
+
 :white_square_button: Get Balances
+
 :white_check_mark: Get Positions
+
 :white_square_button: Get History
+
 :white_square_button: Get Gain/Loss
+
 :white_check_mark: Get Orders
+
 :white_check_mark: Get an Order
 
 ### Trading
 
 :white_check_mark: Modify Order
+
 :white_check_mark: Cancel Order
+
 :white_square_button: Place Equity Order
+
 :white_check_mark: Place Option Order
+
 :white_check_mark: Place Multileg Order
+
 :white_square_button: Place Combo Order
+
 :white_square_button: Place OTO Order
+
 :white_square_button: Place OCO Order
+
 :white_square_button: Place OTOCO Order
 
 ### Market Data
 
 :white_check_mark: Get Quotes
+
 :white_check_mark: Get Option Chains
+
 :white_check_mark: Get Option Strikes
+
 :white_check_mark: Get Option Expirations
+
 :white_check_mark: Lookup Option Symbols
+
 :white_square_button: Get Historical Quotes
+
 :white_square_button: Get Time and Sales
+
 :white_square_button: Get ETB Securities
+
 :white_square_button: Get Clock
+
 :white_square_button: Get Calendar
+
 :white_square_button: Search Companies
+
 :white_square_button: Lookup Symbol
 
 ### Streaming
 
 :white_square_button: Market WebSocket
+
 :white_check_mark: Account WebSocket
