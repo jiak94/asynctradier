@@ -47,8 +47,7 @@ if your are using poetry
 
 ### Market Data
 
-- [ ] Get Quotes
-- [ ] Get QUotes
+- [x] Get Quotes
 - [ ] Get Option Chains
 - [ ] Get Option Strikes
 - [ ] Get Option Expirations
