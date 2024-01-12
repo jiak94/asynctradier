@@ -1149,6 +1149,12 @@ async def test_get_option_expirations_all_info(mocker, tradier_client):
     )
     assert len(expirations) == len(mock_get("")["expirations"]["expiration"])
 
+    for exp, exp_info in zip(expirations, mock_get("")["expirations"]["expiration"]):
+        assert exp.date == exp_info["date"]
+        assert exp.contract_size == exp_info["contract_size"]
+        assert exp.expiration_type == exp_info["expiration_type"]
+        assert exp.strikes == exp_info["strikes"]["strike"]
+
     tradier_client.session.get.assert_called_once_with(
         "/v1/markets/options/expirations",
         params={
@@ -1248,4 +1254,45 @@ async def test_get_option_expirations_toggles(mocker, tradier_client):
             "contractSize": "false",
             "expirationType": "true",
         },
+    )
+
+
+@pytest.mark.asyncio
+async def test_option_lookup(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "symbols": [
+                {
+                    "rootSymbol": "SPY",
+                    "options": [
+                        "SPY210331C00300000",
+                        "SPY200702P00252000",
+                        "SPY200930C00334000",
+                        "SPY210115C00305000",
+                        "SPY200622C00288000",
+                    ],
+                }
+            ]
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    options = await tradier_client.option_lookup("SPY")
+    assert len(options) == 5
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/lookup", params={"underlying": "SPY"}
+    )
+
+
+@pytest.mark.asyncio
+async def test_option_lookup_invalid_symbol(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"symbols": None}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    options = await tradier_client.option_lookup("SEFDF")
+    assert len(options) == 0
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/lookup", params={"underlying": "SEFDF"}
     )

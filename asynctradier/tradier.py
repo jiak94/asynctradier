@@ -610,3 +610,20 @@ class TradierClient:
                 )
 
         return results
+
+    async def option_lookup(self, symbol: str) -> List[str]:
+        """
+        Retrieves a list of option symbols for a given symbol.
+
+        Args:
+            symbol (str): The symbol for which to retrieve option symbols.
+
+        Returns:
+            List[str]: A list of option symbols.
+        """
+        url = "/v1/markets/options/lookup"
+        params = {"underlying": symbol}
+        response = await self.session.get(url, params=params)
+        if response.get("symbols") is None:
+            return []
+        return response.get("symbols")[0].get("options", [])

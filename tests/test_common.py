@@ -548,25 +548,23 @@ def test_expirations():
         "date": "2023-11-10",
         "contract_size": 100,
         "expiration_type": "weeklys",
-        "strikes": {
-            "strike": [
-                12.0,
-                13.0,
-                14.0,
-                15.0,
-                16.0,
-                17.0,
-                18.0,
-                18.5,
-                19.0,
-                19.5,
-                20.0,
-                20.5,
-                21.0,
-                21.5,
-                22.0,
-            ]
-        },
+        "strikes": [
+            12.0,
+            13.0,
+            14.0,
+            15.0,
+            16.0,
+            17.0,
+            18.0,
+            18.5,
+            19.0,
+            19.5,
+            20.0,
+            20.5,
+            21.0,
+            21.5,
+            22.0,
+        ],
     }
 
     expirations = Expiration(**expiration_info)
@@ -574,4 +572,5 @@ def test_expirations():
     assert expirations.date == "2023-11-10"
     assert expirations.contract_size == 100
     assert expirations.expiration_type == "weeklys"
-    assert len(expirations.strikes) == len(expiration_info["strikes"]["strike"])
+    print(expirations.strikes)
+    assert len(expirations.strikes) == len(expiration_info["strikes"])
