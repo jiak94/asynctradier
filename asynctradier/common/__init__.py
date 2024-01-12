@@ -111,3 +111,34 @@ class OrderStatus(StrEnum):
     pending = "pending"
     error = "error"
     ok = "ok"
+
+
+class QuoteType(StrEnum):
+    """
+    Represents the type of quote.
+
+    Possible values:
+    - stock: for stock quotes
+    - option: for option quotes
+    - index: for index quotes
+    - mutual_fund: for mutual fund quotes
+    """
+
+    stock = "stock"
+    option = "option"
+    etf = "etf"
+    index = "index"
+    mutual_fund = "mutual_fund"
+
+
+class OptionType(StrEnum):
+    """
+    Represents the type of option.
+
+    Possible values:
+    - call: for call options
+    - put: for put options
+    """
+
+    call = "call"
+    put = "put"

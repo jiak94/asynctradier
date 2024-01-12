@@ -1,12 +1,13 @@
 import json
-from typing import List, Optional
+from typing import AsyncIterator, List, Optional
 
 import websockets
 
-from asynctradier.common import Duration, OrderClass, OrderSide, OrderType
+from asynctradier.common import Duration, OptionType, OrderClass, OrderSide, OrderType
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.position import Position
+from asynctradier.common.quote import Quote
 from asynctradier.exceptions import (
     InvalidExiprationDate,
     InvalidOptionType,
@@ -14,11 +15,7 @@ from asynctradier.exceptions import (
     InvalidStrikeType,
     MissingRequiredParameter,
 )
-from asynctradier.utils.common import (
-    build_option_symbol,
-    is_valid_expiration_date,
-    is_valid_option_type,
-)
+from asynctradier.utils.common import build_option_symbol, is_valid_expiration_date
 
 from .utils.webutils import WebUtil
 
@@ -56,10 +53,14 @@ class TradierClient:
             positions = response["positions"]["position"]
         if not isinstance(positions, list):
             positions = [positions]
+        results: List[Position] = []
         for position in positions:
-            yield Position(
-                **position,
+            results.append(
+                Position(
+                    **position,
+                )
             )
+        return results
 
     async def get_order(self, order_id: str) -> Order:
         """
@@ -84,7 +85,7 @@ class TradierClient:
         symbol: str,
         expiration_date: str,
         strike: float | int,
-        option_type: str,
+        option_type: OptionType,
         quantity: int,
         order_type: OrderType = OrderType.market,
         order_duration: Duration = Duration.day,
@@ -99,7 +100,7 @@ class TradierClient:
             symbol (str): The symbol of the option.
             expiration_date (str): The expiration date of the option (YYYY-MM-DD).
             strike (float | int): The strike price of the option.
-            option_type (str): The type of the option (call or put).
+            option_type (OptionType): The type of the option (call or put).
             quantity (int): The quantity of the option contracts to buy.
             order_type (OrderType, optional): The type of the order. Defaults to OrderType.market.
             order_duration (Duration, optional): The duration of the order. Defaults to Duration.day.
@@ -129,7 +130,7 @@ class TradierClient:
         symbol: str,
         expiration_date: str,
         strike: float | int,
-        option_type: str,
+        option_type: OptionType,
         quantity: int,
         order_type: OrderType = OrderType.market,
         order_duration: Duration = Duration.day,
@@ -144,7 +145,7 @@ class TradierClient:
             symbol (str): The symbol of the option.
             expiration_date (str): The expiration date of the option (YYYY-MM-DD).
             strike (float | int): The strike price of the option.
-            option_type (str): The type of the option (call or put).
+            option_type (OptionType): The type of the option (call or put).
             quantity (int): The quantity of the option contracts to sell.
             order_type (OrderType, optional): The type of the order. Defaults to OrderType.market.
             order_duration (Duration, optional): The duration of the order. Defaults to Duration.day.
@@ -175,7 +176,7 @@ class TradierClient:
         symbol: str,
         expiration_date: str,
         strike: float | int,
-        option_type: str,
+        option_type: OptionType,
         quantity: int,
         order_type: OrderType = OrderType.market,
         order_duration: Duration = Duration.day,
@@ -191,7 +192,7 @@ class TradierClient:
             symbol (str): The symbol of the option.
             expiration_date (str): The expiration date of the option (YYYY-MM-DD).
             strike (float | int): The strike price of the option.
-            option_type (str): The type of the option (call or put).
+            option_type (OptionType): The type of the option (call or put).
             quantity (int): The quantity of the option contracts.
             order_type (OrderType, optional): The type of the order. Defaults to OrderType.market.
             order_duration (Duration, optional): The duration of the order. Defaults to Duration.day.
@@ -205,7 +206,7 @@ class TradierClient:
         if not is_valid_expiration_date(expiration_date):
             raise InvalidExiprationDate(expiration_date)
 
-        if not is_valid_option_type(option_type):
+        if not isinstance(option_type, OptionType):
             raise InvalidOptionType(option_type)
 
         if not isinstance(strike, float) and not isinstance(strike, int):
@@ -222,7 +223,7 @@ class TradierClient:
             "class": OrderClass.option.value,
             "symbol": symbol,
             "option_symbol": build_option_symbol(
-                symbol, expiration_date, strike, option_type
+                symbol, expiration_date, strike, option_type.value
             ),
             "side": side.value,
             "quantity": str(quantity),
@@ -268,7 +269,7 @@ class TradierClient:
         res = []
         page = 1
         while True:
-            orders = [order async for order in self._get_orders(page)]
+            orders = await self._get_orders(page)
             res += orders
             page += 1
             if len(orders) <= 0:
@@ -298,10 +299,14 @@ class TradierClient:
 
         if not isinstance(orders, list):
             orders = [orders]
+        results: List[Order] = []
         for order in orders:
-            yield Order(
-                **order,
+            results.append(
+                Order(
+                    **order,
+                )
             )
+        return results
 
     async def modify_order(
         self,
@@ -354,7 +359,7 @@ class TradierClient:
         response = await self.session.post(url)
         return response
 
-    async def stream_order(self, with_detail: bool = True) -> None:
+    async def stream_order(self, with_detail: bool = True) -> AsyncIterator[Order]:
         """
         Stream order events.
 
@@ -435,3 +440,41 @@ class TradierClient:
         return Order(
             **order,
         )
+
+    async def get_quotes(self, symbols: List[str], greeks: bool = False) -> List[Quote]:
+        """
+        Get quotes for a list of symbols.
+
+        Args:
+            symbols (List[str]): A list of symbols.
+            greeks (bool, optional): Whether to include greeks in the response. Defaults to False.
+        """
+        url = "/v1/markets/quotes"
+        params = {"symbols": ",".join(symbols), "greeks": str(greeks).lower()}
+
+        response = await self.session.get(url, params=params)
+
+        quotes = response.get("quotes", {}).get("quote", [])
+        results = []
+        if not isinstance(quotes, list):
+            quotes = [quotes]
+        for quote in quotes:
+            results.append(
+                Quote(
+                    **quote,
+                )
+            )
+        unmatch_symbols = (
+            response.get("quotes", {}).get("unmatched_symbols", {}).get("symbol", [])
+        )
+        if not isinstance(unmatch_symbols, list):
+            unmatch_symbols = [unmatch_symbols]
+
+        for symbol in unmatch_symbols:
+            results.append(
+                Quote(
+                    symbol=symbol,
+                    note="unmatched symbol",
+                )
+            )
+        return results
