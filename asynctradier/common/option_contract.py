@@ -3,13 +3,9 @@ This module defines the OptionContract class, which represents an option contrac
 """
 
 
-from asynctradier.common import OrderSide
+from asynctradier.common import OptionType, OrderSide
 from asynctradier.exceptions import InvalidExiprationDate, InvalidOptionType
-from asynctradier.utils.common import (
-    build_option_symbol,
-    is_valid_expiration_date,
-    is_valid_option_type,
-)
+from asynctradier.utils.common import build_option_symbol, is_valid_expiration_date
 
 
 class OptionContract:
@@ -30,13 +26,13 @@ class OptionContract:
         symbol: str,
         expiration_date: str,
         strike: float,
-        option_type: str,
+        option_type: OptionType,
         order_side: OrderSide,
         quantity: int,
     ) -> None:
         if not is_valid_expiration_date(expiration_date):
             raise InvalidExiprationDate(expiration_date)
-        if not is_valid_option_type(option_type):
+        if not isinstance(option_type, OptionType):
             raise InvalidOptionType(option_type)
 
         self.symbol = symbol
@@ -61,5 +57,5 @@ class OptionContract:
             str: The option symbol.
         """
         return build_option_symbol(
-            self.symbol, self.expiration_date, self.strike, self.option_type
+            self.symbol, self.expiration_date, self.strike, self.option_type.value
         )

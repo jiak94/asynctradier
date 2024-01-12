@@ -1,6 +1,15 @@
-from asynctradier.common import Duration, OrderClass, OrderSide, OrderStatus, OrderType
+from asynctradier.common import (
+    Duration,
+    OptionType,
+    OrderClass,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    QuoteType,
+)
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
+from asynctradier.common.quote import Quote
 from asynctradier.exceptions import InvalidExiprationDate, InvalidOptionType
 
 
@@ -329,7 +338,7 @@ def test_option_contract():
         "SPY",
         "2019-03-29",
         274.00,
-        "call",
+        OptionType.call,
         OrderSide.buy_to_open,
         1,
     )
@@ -337,7 +346,7 @@ def test_option_contract():
     assert contract.symbol == "SPY"
     assert contract.expiration_date == "2019-03-29"
     assert contract.strike == 274.00
-    assert contract.option_type == "call"
+    assert contract.option_type == OptionType.call
     assert contract.order_side == OrderSide.buy_to_open
     assert contract.quantity == 1
     assert contract.option_symbol == "SPY190329C00274000"
@@ -349,7 +358,7 @@ def test_option_contract_invalid_exp_date():
             "SPY",
             "2019/03/29",
             274.00,
-            "call",
+            OptionType.call,
             OrderSide.buy_to_open,
             1,
         )
@@ -369,3 +378,165 @@ def test_option_contract_invalid_option_type():
         )
     except InvalidOptionType:
         assert True
+
+
+def test_quote_stock():
+    quote_info = {
+        "symbol": "AAPL",
+        "description": "Apple Inc",
+        "exch": "Q",
+        "type": "stock",
+        "last": 185.815,
+        "change": 0.23,
+        "volume": 11815107,
+        "open": 186.06,
+        "high": 186.74,
+        "low": 185.19,
+        "close": None,
+        "bid": 185.81,
+        "ask": 185.82,
+        "change_percentage": 0.13,
+        "average_volume": 54243871,
+        "last_volume": 100,
+        "trade_date": 1705075974129,
+        "prevclose": 185.59,
+        "week_52_high": 199.62,
+        "week_52_low": 131.66,
+        "bidsize": 5,
+        "bidexch": "K",
+        "bid_date": 1705075974000,
+        "asksize": 2,
+        "askexch": "Q",
+        "ask_date": 1705075974000,
+        "root_symbols": "AAPL",
+    }
+
+    quote = Quote(**quote_info)
+
+    assert quote.symbol == "AAPL"
+    assert quote.description == "Apple Inc"
+    assert quote.exch == "Q"
+    assert quote.type == QuoteType.stock
+    assert quote.last == 185.815
+    assert quote.change == 0.23
+    assert quote.volume == 11815107
+    assert quote.open == 186.06
+    assert quote.high == 186.74
+    assert quote.low == 185.19
+    assert quote.close is None
+    assert quote.bid == 185.81
+    assert quote.ask == 185.82
+    assert quote.change_percentage == 0.13
+    assert quote.average_volume == 54243871
+    assert quote.last_volume == 100
+    assert quote.trade_date == 1705075974129
+    assert quote.prevclose == 185.59
+    assert quote.week_52_high == 199.62
+    assert quote.week_52_low == 131.66
+    assert quote.bidsize == 5
+    assert quote.bidexch == "K"
+    assert quote.bid_date == 1705075974000
+    assert quote.asksize == 2
+    assert quote.askexch == "Q"
+    assert quote.ask_date == 1705075974000
+    assert quote.root_symbols == "AAPL"
+
+
+def test_quote_option():
+    quote_info = {
+        "symbol": "TSLA240119P00250000",
+        "description": "TSLA Jan 19 2024 $250.00 Put",
+        "exch": "Z",
+        "type": "option",
+        "last": 28.64,
+        "change": 5.62,
+        "volume": 325,
+        "open": 28.2,
+        "high": 30.28,
+        "low": 25.0,
+        "close": None,
+        "bid": 28.35,
+        "ask": 28.75,
+        "underlying": "TSLA",
+        "strike": 250.0,
+        "greeks": {
+            "delta": -0.9604526529331165,
+            "gamma": 0.005467830085355449,
+            "theta": -0.08873705325377128,
+            "vega": 0.024449975355968073,
+            "rho": 0.0016218090363680116,
+            "phi": -0.001667023522931263,
+            "bid_iv": 0.0,
+            "mid_iv": 0.568797,
+            "ask_iv": 0.568797,
+            "smv_vol": 0.471,
+            "updated_at": "2024-01-12 15:59:03",
+        },
+        "change_percentage": 24.42,
+        "average_volume": 0,
+        "last_volume": 20,
+        "trade_date": 1705076054411,
+        "prevclose": 23.02,
+        "week_52_high": 0.0,
+        "week_52_low": 0.0,
+        "bidsize": 28,
+        "bidexch": "P",
+        "bid_date": 1705075972000,
+        "asksize": 12,
+        "askexch": "Z",
+        "ask_date": 1705075972000,
+        "open_interest": 31812,
+        "contract_size": 100,
+        "expiration_date": "2024-01-19",
+        "expiration_type": "standard",
+        "option_type": "put",
+        "root_symbol": "TSLA",
+    }
+
+    quote = Quote(**quote_info)
+
+    assert quote.symbol == "TSLA240119P00250000"
+    assert quote.description == "TSLA Jan 19 2024 $250.00 Put"
+    assert quote.exch == "Z"
+    assert quote.type == QuoteType.option
+    assert quote.last == 28.64
+    assert quote.change == 5.62
+    assert quote.volume == 325
+    assert quote.open == 28.2
+    assert quote.high == 30.28
+    assert quote.low == 25.0
+    assert quote.close is None
+    assert quote.bid == 28.35
+    assert quote.ask == 28.75
+    assert quote.underlying == "TSLA"
+    assert quote.strike == 250.0
+    assert quote.greeks.delta == -0.9604526529331165
+    assert quote.greeks.gamma == 0.005467830085355449
+    assert quote.greeks.theta == -0.08873705325377128
+    assert quote.greeks.vega == 0.024449975355968073
+    assert quote.greeks.rho == 0.0016218090363680116
+    assert quote.greeks.phi == -0.001667023522931263
+    assert quote.greeks.bid_iv == 0.0
+    assert quote.greeks.mid_iv == 0.568797
+    assert quote.greeks.ask_iv == 0.568797
+    assert quote.greeks.smv_vol == 0.471
+    assert quote.greeks.updated_at == "2024-01-12 15:59:03"
+    assert quote.change_percentage == 24.42
+    assert quote.average_volume == 0
+    assert quote.last_volume == 20
+    assert quote.trade_date == 1705076054411
+    assert quote.prevclose == 23.02
+    assert quote.week_52_high == 0.0
+    assert quote.week_52_low == 0.0
+    assert quote.bidsize == 28
+    assert quote.bidexch == "P"
+    assert quote.bid_date == 1705075972000
+    assert quote.asksize == 12
+    assert quote.askexch == "Z"
+    assert quote.ask_date == 1705075972000
+    assert quote.open_interest == 31812
+    assert quote.contract_size == 100
+    assert quote.expiration_date == "2024-01-19"
+    assert quote.expiration_type == "standard"
+    assert quote.option_type == OptionType.put
+    assert quote.root_symbol == "TSLA"
