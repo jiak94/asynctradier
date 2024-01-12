@@ -478,3 +478,46 @@ class TradierClient:
                 )
             )
         return results
+
+    async def get_option_chains(
+        self,
+        symbol: str,
+        expiration_date: str,
+        greeks: bool = False,
+        option_type: Optional[OptionType] = None,
+    ) -> List[Quote]:
+        """
+        Get option chains for a symbol.
+
+        Args:
+            symbol (str): The symbol.
+            expiration_date (str): The expiration date (YYYY-MM-DD).
+            greeks (bool, optional): Whether to include greeks in the response. Defaults to False.
+        """
+        if not is_valid_expiration_date(expiration_date):
+            raise InvalidExiprationDate(expiration_date)
+
+        url = "/v1/markets/options/chains"
+        params = {
+            "symbol": symbol,
+            "expiration": expiration_date,
+            "greeks": str(greeks).lower(),
+        }
+        response = await self.session.get(url, params=params)
+
+        # if no options or options is None, return empty list
+        if response.get("options") is None:
+            return []
+        results = []
+        chains = response.get("options", {}).get("option", [])
+        if not isinstance(chains, list):
+            chains = [chains]
+        for chain in chains:
+            if option_type is not None and chain["option_type"] != option_type.value:
+                continue
+            results.append(
+                Quote(
+                    **chain,
+                )
+            )
+        return results
