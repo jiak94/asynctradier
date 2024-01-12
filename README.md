@@ -48,10 +48,10 @@ if your are using poetry
 ### Market Data
 
 - [x] Get Quotes
-- [ ] Get Option Chains
-- [ ] Get Option Strikes
-- [ ] Get Option Expirations
-- [ ] Lookup Option Symbols
+- [x] Get Option Chains
+- [x] Get Option Strikes
+- [x] Get Option Expirations
+- [x] Lookup Option Symbols
 - [ ] Get Historical Quotes
 - [ ] Get Time and Sales
 - [ ] Get ETB Securities
