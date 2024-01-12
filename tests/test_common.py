@@ -7,6 +7,7 @@ from asynctradier.common import (
     OrderType,
     QuoteType,
 )
+from asynctradier.common.expiration import Expiration
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.quote import Quote
@@ -540,3 +541,36 @@ def test_quote_option():
     assert quote.expiration_type == "standard"
     assert quote.option_type == OptionType.put
     assert quote.root_symbol == "TSLA"
+
+
+def test_expirations():
+    expiration_info = {
+        "date": "2023-11-10",
+        "contract_size": 100,
+        "expiration_type": "weeklys",
+        "strikes": [
+            12.0,
+            13.0,
+            14.0,
+            15.0,
+            16.0,
+            17.0,
+            18.0,
+            18.5,
+            19.0,
+            19.5,
+            20.0,
+            20.5,
+            21.0,
+            21.5,
+            22.0,
+        ],
+    }
+
+    expirations = Expiration(**expiration_info)
+
+    assert expirations.date == "2023-11-10"
+    assert expirations.contract_size == 100
+    assert expirations.expiration_type == "weeklys"
+    print(expirations.strikes)
+    assert len(expirations.strikes) == len(expiration_info["strikes"])

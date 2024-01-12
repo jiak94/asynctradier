@@ -4,6 +4,7 @@ import pytest
 
 from asynctradier.common import Duration, OptionType, OrderSide, OrderType
 from asynctradier.common.option_contract import OptionContract
+from asynctradier.exceptions import InvalidExiprationDate
 from asynctradier.tradier import TradierClient
 
 
@@ -753,4 +754,545 @@ async def test_get_quotes_with_greeks(mocker, tradier_client):
     tradier_client.session.get.assert_called_once_with(
         "/v1/markets/quotes",
         params={"symbols": "TSLA240119P00250000", "greeks": "true"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_option_chains(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "options": {
+                "option": [
+                    {
+                        "symbol": "TSLA240119P00290000",
+                        "description": "TSLA Jan 19 2024 $290.00 Put",
+                        "exch": "Z",
+                        "type": "option",
+                        "last": 62.16,
+                        "change": 0.00,
+                        "volume": 0,
+                        "open": None,
+                        "high": None,
+                        "low": None,
+                        "close": None,
+                        "bid": 70.25,
+                        "ask": 74.1,
+                        "underlying": "TSLA",
+                        "strike": 290.0,
+                        "greeks": {
+                            "delta": -0.9998557711335186,
+                            "gamma": 3.5165824253684816e-5,
+                            "theta": -7.229633668219417e-4,
+                            "vega": 1.9028779215795382e-4,
+                            "rho": 6.64036071274819e-6,
+                            "phi": -6.7701434035364e-6,
+                            "bid_iv": 0.0,
+                            "mid_iv": 1.282883,
+                            "ask_iv": 1.282883,
+                            "smv_vol": 0.634,
+                            "updated_at": "2024-01-12 16:59:08",
+                        },
+                        "change_percentage": 0.00,
+                        "average_volume": 0,
+                        "last_volume": 1220,
+                        "trade_date": 1705004512652,
+                        "prevclose": 62.16,
+                        "week_52_high": 0.0,
+                        "week_52_low": 0.0,
+                        "bidsize": 51,
+                        "bidexch": "N",
+                        "bid_date": 1705079354000,
+                        "asksize": 51,
+                        "askexch": "N",
+                        "ask_date": 1705079354000,
+                        "open_interest": 835,
+                        "contract_size": 100,
+                        "expiration_date": "2024-01-19",
+                        "expiration_type": "standard",
+                        "option_type": "put",
+                        "root_symbol": "TSLA",
+                    },
+                    {
+                        "symbol": "TSLA240119C00290000",
+                        "description": "TSLA Jan 19 2024 $290.00 Call",
+                        "exch": "Z",
+                        "type": "option",
+                        "last": 0.02,
+                        "change": -0.02,
+                        "volume": 619,
+                        "open": 0.03,
+                        "high": 0.03,
+                        "low": 0.01,
+                        "close": None,
+                        "bid": 0.01,
+                        "ask": 0.02,
+                        "underlying": "TSLA",
+                        "strike": 290.0,
+                        "greeks": {
+                            "delta": 1.4422886648140625e-4,
+                            "gamma": 3.5165824253684816e-5,
+                            "theta": -7.229633668219417e-4,
+                            "vega": 1.9028779215795382e-4,
+                            "rho": 6.64036071274819e-6,
+                            "phi": -6.7701434035364e-6,
+                            "bid_iv": 0.679611,
+                            "mid_iv": 0.701844,
+                            "ask_iv": 0.724077,
+                            "smv_vol": 0.634,
+                            "updated_at": "2024-01-12 16:59:08",
+                        },
+                        "change_percentage": -50.00,
+                        "average_volume": 0,
+                        "last_volume": 4,
+                        "trade_date": 1705078886958,
+                        "prevclose": 0.04,
+                        "week_52_high": 0.0,
+                        "week_52_low": 0.0,
+                        "bidsize": 1075,
+                        "bidexch": "D",
+                        "bid_date": 1705079341000,
+                        "asksize": 614,
+                        "askexch": "D",
+                        "ask_date": 1705079341000,
+                        "open_interest": 18077,
+                        "contract_size": 100,
+                        "expiration_date": "2024-01-19",
+                        "expiration_type": "standard",
+                        "option_type": "call",
+                        "root_symbol": "TSLA",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    options = await tradier_client.get_option_chains("TSLA", "2024-01-19")
+    assert len(options) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/chains",
+        params={"symbol": "TSLA", "expiration": "2024-01-19", "greeks": "false"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_option_chains_filter(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "options": {
+                "option": [
+                    {
+                        "symbol": "TSLA240119P00290000",
+                        "description": "TSLA Jan 19 2024 $290.00 Put",
+                        "exch": "Z",
+                        "type": "option",
+                        "last": 62.16,
+                        "change": 0.00,
+                        "volume": 0,
+                        "open": None,
+                        "high": None,
+                        "low": None,
+                        "close": None,
+                        "bid": 70.25,
+                        "ask": 74.1,
+                        "underlying": "TSLA",
+                        "strike": 290.0,
+                        "greeks": {
+                            "delta": -0.9998557711335186,
+                            "gamma": 3.5165824253684816e-5,
+                            "theta": -7.229633668219417e-4,
+                            "vega": 1.9028779215795382e-4,
+                            "rho": 6.64036071274819e-6,
+                            "phi": -6.7701434035364e-6,
+                            "bid_iv": 0.0,
+                            "mid_iv": 1.282883,
+                            "ask_iv": 1.282883,
+                            "smv_vol": 0.634,
+                            "updated_at": "2024-01-12 16:59:08",
+                        },
+                        "change_percentage": 0.00,
+                        "average_volume": 0,
+                        "last_volume": 1220,
+                        "trade_date": 1705004512652,
+                        "prevclose": 62.16,
+                        "week_52_high": 0.0,
+                        "week_52_low": 0.0,
+                        "bidsize": 51,
+                        "bidexch": "N",
+                        "bid_date": 1705079354000,
+                        "asksize": 51,
+                        "askexch": "N",
+                        "ask_date": 1705079354000,
+                        "open_interest": 835,
+                        "contract_size": 100,
+                        "expiration_date": "2024-01-19",
+                        "expiration_type": "standard",
+                        "option_type": "put",
+                        "root_symbol": "TSLA",
+                    },
+                    {
+                        "symbol": "TSLA240119C00290000",
+                        "description": "TSLA Jan 19 2024 $290.00 Call",
+                        "exch": "Z",
+                        "type": "option",
+                        "last": 0.02,
+                        "change": -0.02,
+                        "volume": 619,
+                        "open": 0.03,
+                        "high": 0.03,
+                        "low": 0.01,
+                        "close": None,
+                        "bid": 0.01,
+                        "ask": 0.02,
+                        "underlying": "TSLA",
+                        "strike": 290.0,
+                        "greeks": {
+                            "delta": 1.4422886648140625e-4,
+                            "gamma": 3.5165824253684816e-5,
+                            "theta": -7.229633668219417e-4,
+                            "vega": 1.9028779215795382e-4,
+                            "rho": 6.64036071274819e-6,
+                            "phi": -6.7701434035364e-6,
+                            "bid_iv": 0.679611,
+                            "mid_iv": 0.701844,
+                            "ask_iv": 0.724077,
+                            "smv_vol": 0.634,
+                            "updated_at": "2024-01-12 16:59:08",
+                        },
+                        "change_percentage": -50.00,
+                        "average_volume": 0,
+                        "last_volume": 4,
+                        "trade_date": 1705078886958,
+                        "prevclose": 0.04,
+                        "week_52_high": 0.0,
+                        "week_52_low": 0.0,
+                        "bidsize": 1075,
+                        "bidexch": "D",
+                        "bid_date": 1705079341000,
+                        "asksize": 614,
+                        "askexch": "D",
+                        "ask_date": 1705079341000,
+                        "open_interest": 18077,
+                        "contract_size": 100,
+                        "expiration_date": "2024-01-19",
+                        "expiration_type": "standard",
+                        "option_type": "call",
+                        "root_symbol": "TSLA",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    options = await tradier_client.get_option_chains(
+        "TSLA", "2024-01-19", option_type=OptionType.put
+    )
+
+    assert len(options) == 1
+
+    assert options[0].symbol == "TSLA240119P00290000"
+    assert options[0].description == "TSLA Jan 19 2024 $290.00 Put"
+    assert options[0].exch == "Z"
+    assert options[0].type == "option"
+    assert options[0].last == 62.16
+    assert options[0].change == 0.00
+    assert options[0].volume == 0
+    assert options[0].open is None
+    assert options[0].high is None
+    assert options[0].low is None
+    assert options[0].close is None
+    assert options[0].bid == 70.25
+    assert options[0].ask == 74.1
+    assert options[0].underlying == "TSLA"
+    assert options[0].strike == 290.0
+    assert options[0].greeks is not None
+    assert options[0].change_percentage == 0.00
+    assert options[0].average_volume == 0
+    assert options[0].last_volume == 1220
+    assert options[0].trade_date == 1705004512652
+    assert options[0].prevclose == 62.16
+    assert options[0].week_52_high == 0.0
+    assert options[0].week_52_low == 0.0
+    assert options[0].bidsize == 51
+    assert options[0].bidexch == "N"
+    assert options[0].bid_date == 1705079354000
+    assert options[0].asksize == 51
+    assert options[0].askexch == "N"
+    assert options[0].ask_date == 1705079354000
+    assert options[0].open_interest == 835
+    assert options[0].contract_size == 100
+    assert options[0].expiration_date == "2024-01-19"
+    assert options[0].expiration_type == "standard"
+    assert options[0].option_type == "put"
+    assert options[0].root_symbol == "TSLA"
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/chains",
+        params={"symbol": "TSLA", "expiration": "2024-01-19", "greeks": "false"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_option_chains_invalid_symbol(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"options": None}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    options = await tradier_client.get_option_chains("sfefd", "2024-01-19")
+    assert len(options) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_option_chains_invalid_date(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"options": None}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    try:
+        await tradier_client.get_option_chains("TSLA", "2024/01/19")
+    except InvalidExiprationDate:
+        assert True
+
+
+@pytest.mark.asyncio
+async def test_get_option_strikes(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "strikes": {
+                "strike": [
+                    22.5,
+                    25.0,
+                    27.5,
+                    30.0,
+                    32.5,
+                    35.0,
+                    37.5,
+                    40.0,
+                    42.5,
+                    45.0,
+                    47.5,
+                    50.0,
+                    52.5,
+                    55.0,
+                    57.5,
+                    60.0,
+                    62.5,
+                    65.0,
+                    67.5,
+                    70.0,
+                    72.5,
+                    75.0,
+                    80.0,
+                    85.0,
+                    90.0,
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    strikes = await tradier_client.get_option_strikes("TSLA", "2024-01-19")
+    assert len(strikes) == len(mock_get("")["strikes"]["strike"])
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/strikes",
+        params={"symbol": "TSLA", "expiration": "2024-01-19"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_option_strikes_invalid_date(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"strikes": None}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    try:
+        await tradier_client.get_option_strikes("TSLA", "2024/01/19")
+    except InvalidExiprationDate:
+        assert True
+
+
+@pytest.mark.asyncio
+async def test_get_option_expirations_all_info(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "expirations": {
+                "expiration": [
+                    {
+                        "date": "2023-11-10",
+                        "contract_size": 100,
+                        "expiration_type": "weeklys",
+                        "strikes": {"strike": [12.0, 13.0, 14.0, 15.0, 16.0, 17.0]},
+                    },
+                    {
+                        "date": "2023-11-17",
+                        "contract_size": 100,
+                        "expiration_type": "standard",
+                        "strikes": {
+                            "strike": [9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]
+                        },
+                    },
+                    {
+                        "date": "2023-12-29",
+                        "contract_size": 100,
+                        "expiration_type": "quarterlys",
+                        "strikes": {
+                            "strike": [12.0, 13.0, 14.0, 15.0, 15.5, 16.0, 16.5]
+                        },
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    expirations = await tradier_client.get_option_expirations(
+        "TSLA", strikes=True, contract_size=True, expiration_type=True
+    )
+    assert len(expirations) == len(mock_get("")["expirations"]["expiration"])
+
+    for exp, exp_info in zip(expirations, mock_get("")["expirations"]["expiration"]):
+        assert exp.date == exp_info["date"]
+        assert exp.contract_size == exp_info["contract_size"]
+        assert exp.expiration_type == exp_info["expiration_type"]
+        assert exp.strikes == exp_info["strikes"]["strike"]
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "true",
+            "contractSize": "true",
+            "expirationType": "true",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_option_expirations_only_date(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "expirations": {
+                "date": [
+                    "2024-01-12",
+                    "2024-01-19",
+                    "2024-01-26",
+                    "2024-02-02",
+                    "2024-02-09",
+                    "2024-02-16",
+                    "2024-02-23",
+                    "2024-03-01",
+                    "2024-03-15",
+                    "2024-04-19",
+                    "2024-05-17",
+                    "2024-06-21",
+                    "2024-07-19",
+                    "2024-08-16",
+                    "2024-09-20",
+                    "2024-12-20",
+                    "2025-01-17",
+                    "2025-06-20",
+                    "2025-09-19",
+                    "2025-12-19",
+                    "2026-01-16",
+                    "2026-06-18",
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    expirations = await tradier_client.get_option_expirations("TSLA")
+    assert len(expirations) == len(mock_get("")["expirations"]["date"])
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "false",
+            "contractSize": "false",
+            "expirationType": "false",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_option_expirations_toggles(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"expirations": None}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    # with strikes
+    await tradier_client.get_option_expirations("TSLA", strikes=True)
+    tradier_client.session.get.assert_called_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "true",
+            "contractSize": "false",
+            "expirationType": "false",
+        },
+    )
+
+    # with contract size
+    await tradier_client.get_option_expirations("TSLA", contract_size=True)
+    tradier_client.session.get.assert_called_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "false",
+            "contractSize": "true",
+            "expirationType": "false",
+        },
+    )
+
+    # with expiration type
+    await tradier_client.get_option_expirations("TSLA", expiration_type=True)
+    tradier_client.session.get.assert_called_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "false",
+            "contractSize": "false",
+            "expirationType": "true",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_option_lookup(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "symbols": [
+                {
+                    "rootSymbol": "SPY",
+                    "options": [
+                        "SPY210331C00300000",
+                        "SPY200702P00252000",
+                        "SPY200930C00334000",
+                        "SPY210115C00305000",
+                        "SPY200622C00288000",
+                    ],
+                }
+            ]
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    options = await tradier_client.option_lookup("SPY")
+    assert len(options) == 5
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/lookup", params={"underlying": "SPY"}
+    )
+
+
+@pytest.mark.asyncio
+async def test_option_lookup_invalid_symbol(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"symbols": None}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    options = await tradier_client.option_lookup("SEFDF")
+    assert len(options) == 0
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/lookup", params={"underlying": "SEFDF"}
     )
