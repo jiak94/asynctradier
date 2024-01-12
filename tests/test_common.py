@@ -1,5 +1,7 @@
 from asynctradier.common import Duration, OrderClass, OrderSide, OrderStatus, OrderType
+from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
+from asynctradier.exceptions import InvalidExiprationDate, InvalidOptionType
 
 
 def test_order_equity():
@@ -320,3 +322,50 @@ def test_order_multileg():
         assert order_leg.transaction_date == leg["transaction_date"]
         assert order_leg.class_ == OrderClass(leg["class"])
         assert order_leg.option_symbol == leg["option_symbol"]
+
+
+def test_option_contract():
+    contract = OptionContract(
+        "SPY",
+        "2019-03-29",
+        274.00,
+        "call",
+        OrderSide.buy_to_open,
+        1,
+    )
+
+    assert contract.symbol == "SPY"
+    assert contract.expiration_date == "2019-03-29"
+    assert contract.strike == 274.00
+    assert contract.option_type == "call"
+    assert contract.order_side == OrderSide.buy_to_open
+    assert contract.quantity == 1
+    assert contract.option_symbol == "SPY190329C00274000"
+
+
+def test_option_contract_invalid_exp_date():
+    try:
+        OptionContract(
+            "SPY",
+            "2019/03/29",
+            274.00,
+            "call",
+            OrderSide.buy_to_open,
+            1,
+        )
+    except InvalidExiprationDate:
+        assert True
+
+
+def test_option_contract_invalid_option_type():
+    try:
+        OptionContract(
+            "SPY",
+            "2019-03-29",
+            274.00,
+            "invalid",
+            OrderSide.buy_to_open,
+            1,
+        )
+    except InvalidOptionType:
+        assert True
