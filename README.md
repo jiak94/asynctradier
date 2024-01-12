@@ -39,7 +39,7 @@ if your are using poetry
 - [x] Cancel Order
 - [ ] Place Equity Order
 - [x] Place Option Order
-- [ ] Place Multileg Order
+- [x] Place Multileg Order
 - [ ] Place Combo Order
 - [ ] Place OTO Order
 - [ ] Place OCO Order
