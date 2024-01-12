@@ -4,6 +4,7 @@ from typing import AsyncIterator, List, Optional
 import websockets
 
 from asynctradier.common import Duration, OptionType, OrderClass, OrderSide, OrderType
+from asynctradier.common.expiration import Expiration
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.position import Position
@@ -546,3 +547,66 @@ class TradierClient:
         if response.get("strikes") is None:
             return []
         return response.get("strikes", {}).get("strike", [])
+
+    async def get_option_expirations(
+        self,
+        symbol: str,
+        strikes: bool = False,
+        contract_size: bool = False,
+        expiration_type: bool = False,
+    ) -> List[Expiration]:
+        """
+        Retrieves the option expirations for a given symbol.
+
+        Args:
+            symbol (str): The symbol for which to retrieve option expirations.
+            strikes (bool, optional): Whether to include strike prices in the response. Defaults to False.
+            contract_size (bool, optional): Whether to include contract sizes in the response. Defaults to False.
+            expiration_type (bool, optional): Whether to include expiration types in the response. Defaults to False.
+
+        Returns:
+            List[Expiration]: A list of Expiration objects representing the option expirations.
+        """
+
+        url = "/v1/markets/options/expirations"
+        params = {
+            "symbol": symbol,
+            "strikes": str(strikes).lower(),
+            "contractSize": str(contract_size).lower(),
+            "expirationType": str(expiration_type).lower(),
+        }
+        response = await self.session.get(url, params=params)
+
+        results = []
+
+        if response.get("expirations") is None:
+            return results
+
+        if strikes or contract_size or expiration_type:
+            expirations = response.get("expirations", {}).get("expiration", [])
+
+            if not isinstance(expirations, list):
+                expirations = [expirations]
+
+            for expiration in expirations:
+                if expiration.get("strikes") is not None:
+                    expiration["strikes"] = expiration["strikes"]["strike"]
+                results.append(
+                    Expiration(
+                        **expiration,
+                    )
+                )
+        else:
+            expirations = response.get("expirations", {}).get("date", [])
+
+            if not isinstance(expirations, list):
+                expirations = [expirations]
+
+            for expiration in expirations:
+                results.append(
+                    Expiration(
+                        date=expiration,
+                    )
+                )
+
+        return results

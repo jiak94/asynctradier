@@ -1060,229 +1060,31 @@ async def test_get_option_strikes(mocker, tradier_client):
         return {
             "strikes": {
                 "strike": [
-                    1.67,
-                    3.33,
-                    5.0,
-                    6.67,
-                    8.33,
-                    10.0,
-                    11.67,
-                    13.33,
-                    15.0,
-                    16.67,
-                    18.33,
-                    20.0,
-                    21.67,
-                    23.33,
+                    22.5,
                     25.0,
-                    26.67,
-                    28.33,
+                    27.5,
                     30.0,
-                    31.67,
-                    33.33,
+                    32.5,
+                    35.0,
+                    37.5,
+                    40.0,
+                    42.5,
+                    45.0,
+                    47.5,
                     50.0,
+                    52.5,
                     55.0,
+                    57.5,
                     60.0,
+                    62.5,
                     65.0,
-                    66.67,
+                    67.5,
                     70.0,
+                    72.5,
                     75.0,
                     80.0,
-                    83.33,
                     85.0,
                     90.0,
-                    95.0,
-                    100.0,
-                    105.0,
-                    110.0,
-                    115.0,
-                    116.67,
-                    120.0,
-                    123.33,
-                    125.0,
-                    126.67,
-                    130.0,
-                    133.33,
-                    135.0,
-                    136.67,
-                    140.0,
-                    143.33,
-                    145.0,
-                    146.67,
-                    150.0,
-                    153.33,
-                    155.0,
-                    156.67,
-                    160.0,
-                    163.33,
-                    165.0,
-                    166.67,
-                    170.0,
-                    173.33,
-                    175.0,
-                    176.67,
-                    180.0,
-                    183.33,
-                    185.0,
-                    186.67,
-                    190.0,
-                    193.33,
-                    195.0,
-                    200.0,
-                    203.33,
-                    205.0,
-                    206.67,
-                    207.5,
-                    210.0,
-                    212.5,
-                    213.33,
-                    215.0,
-                    216.67,
-                    217.5,
-                    220.0,
-                    222.5,
-                    223.33,
-                    225.0,
-                    226.67,
-                    227.5,
-                    230.0,
-                    232.5,
-                    233.33,
-                    235.0,
-                    236.67,
-                    237.5,
-                    240.0,
-                    242.5,
-                    243.33,
-                    245.0,
-                    246.67,
-                    247.5,
-                    250.0,
-                    252.5,
-                    253.33,
-                    255.0,
-                    256.67,
-                    257.5,
-                    260.0,
-                    262.5,
-                    263.33,
-                    265.0,
-                    266.67,
-                    267.5,
-                    270.0,
-                    272.5,
-                    273.33,
-                    275.0,
-                    276.67,
-                    277.5,
-                    280.0,
-                    282.5,
-                    283.33,
-                    285.0,
-                    286.67,
-                    287.5,
-                    290.0,
-                    293.33,
-                    295.0,
-                    296.67,
-                    300.0,
-                    303.33,
-                    305.0,
-                    306.67,
-                    310.0,
-                    313.33,
-                    315.0,
-                    316.67,
-                    320.0,
-                    323.33,
-                    325.0,
-                    326.67,
-                    330.0,
-                    333.33,
-                    335.0,
-                    336.67,
-                    340.0,
-                    341.67,
-                    343.33,
-                    345.0,
-                    346.67,
-                    350.0,
-                    353.33,
-                    355.0,
-                    356.67,
-                    358.33,
-                    360.0,
-                    363.33,
-                    365.0,
-                    366.67,
-                    370.0,
-                    373.33,
-                    375.0,
-                    376.67,
-                    380.0,
-                    383.33,
-                    385.0,
-                    386.67,
-                    390.0,
-                    391.67,
-                    393.33,
-                    396.67,
-                    400.0,
-                    408.33,
-                    410.0,
-                    416.67,
-                    420.0,
-                    425.0,
-                    433.33,
-                    440.0,
-                    441.67,
-                    450.0,
-                    458.33,
-                    466.67,
-                    475.0,
-                    483.33,
-                    491.67,
-                    500.0,
-                    510.0,
-                    516.67,
-                    520.0,
-                    530.0,
-                    533.33,
-                    540.0,
-                    550.0,
-                    558.33,
-                    560.0,
-                    566.67,
-                    575.0,
-                    583.33,
-                    591.67,
-                    600.0,
-                    608.33,
-                    616.67,
-                    625.0,
-                    633.33,
-                    641.67,
-                    650.0,
-                    666.67,
-                    675.0,
-                    683.33,
-                    691.67,
-                    700.0,
-                    708.33,
-                    716.67,
-                    725.0,
-                    733.33,
-                    741.67,
-                    750.0,
-                    758.33,
-                    766.67,
-                    775.0,
-                    783.33,
-                    791.67,
-                    800.0,
-                    808.33,
-                    816.67,
-                    825.0,
                 ]
             }
         }
@@ -1307,3 +1109,143 @@ async def test_get_option_strikes_invalid_date(mocker, tradier_client):
         await tradier_client.get_option_strikes("TSLA", "2024/01/19")
     except InvalidExiprationDate:
         assert True
+
+
+@pytest.mark.asyncio
+async def test_get_option_expirations_all_info(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "expirations": {
+                "expiration": [
+                    {
+                        "date": "2023-11-10",
+                        "contract_size": 100,
+                        "expiration_type": "weeklys",
+                        "strikes": {"strike": [12.0, 13.0, 14.0, 15.0, 16.0, 17.0]},
+                    },
+                    {
+                        "date": "2023-11-17",
+                        "contract_size": 100,
+                        "expiration_type": "standard",
+                        "strikes": {
+                            "strike": [9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]
+                        },
+                    },
+                    {
+                        "date": "2023-12-29",
+                        "contract_size": 100,
+                        "expiration_type": "quarterlys",
+                        "strikes": {
+                            "strike": [12.0, 13.0, 14.0, 15.0, 15.5, 16.0, 16.5]
+                        },
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    expirations = await tradier_client.get_option_expirations(
+        "TSLA", strikes=True, contract_size=True, expiration_type=True
+    )
+    assert len(expirations) == len(mock_get("")["expirations"]["expiration"])
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "true",
+            "contractSize": "true",
+            "expirationType": "true",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_option_expirations_only_date(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "expirations": {
+                "date": [
+                    "2024-01-12",
+                    "2024-01-19",
+                    "2024-01-26",
+                    "2024-02-02",
+                    "2024-02-09",
+                    "2024-02-16",
+                    "2024-02-23",
+                    "2024-03-01",
+                    "2024-03-15",
+                    "2024-04-19",
+                    "2024-05-17",
+                    "2024-06-21",
+                    "2024-07-19",
+                    "2024-08-16",
+                    "2024-09-20",
+                    "2024-12-20",
+                    "2025-01-17",
+                    "2025-06-20",
+                    "2025-09-19",
+                    "2025-12-19",
+                    "2026-01-16",
+                    "2026-06-18",
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    expirations = await tradier_client.get_option_expirations("TSLA")
+    assert len(expirations) == len(mock_get("")["expirations"]["date"])
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "false",
+            "contractSize": "false",
+            "expirationType": "false",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_option_expirations_toggles(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"expirations": None}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    # with strikes
+    await tradier_client.get_option_expirations("TSLA", strikes=True)
+    tradier_client.session.get.assert_called_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "true",
+            "contractSize": "false",
+            "expirationType": "false",
+        },
+    )
+
+    # with contract size
+    await tradier_client.get_option_expirations("TSLA", contract_size=True)
+    tradier_client.session.get.assert_called_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "false",
+            "contractSize": "true",
+            "expirationType": "false",
+        },
+    )
+
+    # with expiration type
+    await tradier_client.get_option_expirations("TSLA", expiration_type=True)
+    tradier_client.session.get.assert_called_with(
+        "/v1/markets/options/expirations",
+        params={
+            "symbol": "TSLA",
+            "strikes": "false",
+            "contractSize": "false",
+            "expirationType": "true",
+        },
+    )
