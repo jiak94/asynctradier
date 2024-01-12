@@ -521,3 +521,28 @@ class TradierClient:
                 )
             )
         return results
+
+    async def get_option_strikes(
+        self, symbol: str, expiration_date: str
+    ) -> List[float]:
+        """
+        Get option strikes for a symbol.
+
+        Args:
+            symbol (str): The symbol.
+            expiration_date (str): The expiration date (YYYY-MM-DD).
+        """
+        if not is_valid_expiration_date(expiration_date):
+            raise InvalidExiprationDate(expiration_date)
+
+        url = "/v1/markets/options/strikes"
+        params = {
+            "symbol": symbol,
+            "expiration": expiration_date,
+        }
+        response = await self.session.get(url, params=params)
+
+        # if no strikes or strikes is None, return empty list
+        if response.get("strikes") is None:
+            return []
+        return response.get("strikes", {}).get("strike", [])
