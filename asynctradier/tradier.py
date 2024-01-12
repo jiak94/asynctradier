@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import websockets
 
-from asynctradier.common import Duration, OptionOrderSide, OrderClass, OrderType
+from asynctradier.common import Duration, OrderClass, OrderSide, OrderType
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.position import Position
@@ -111,7 +111,7 @@ class TradierClient:
             Order: The Order object.
         """
         return await self._option_operation(
-            OptionOrderSide.buy_to_open,
+            OrderSide.buy_to_open,
             symbol,
             expiration_date,
             strike,
@@ -156,7 +156,7 @@ class TradierClient:
             Order: The Order object.
         """
         return await self._option_operation(
-            OptionOrderSide.sell_to_close,
+            OrderSide.sell_to_close,
             symbol,
             expiration_date,
             strike,
@@ -171,7 +171,7 @@ class TradierClient:
 
     async def _option_operation(
         self,
-        side: OptionOrderSide,
+        side: OrderSide,
         symbol: str,
         expiration_date: str,
         strike: float | int,
@@ -187,7 +187,7 @@ class TradierClient:
         Perform an option operation.
 
         Args:
-            side (OptionOrderSide): The side of the option order.
+            side (OrderSide): The side of the option order.
             symbol (str): The symbol of the option.
             expiration_date (str): The expiration date of the option (YYYY-MM-DD).
             strike (float | int): The strike price of the option.

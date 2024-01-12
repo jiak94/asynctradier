@@ -2,7 +2,7 @@ from unittest.mock import call
 
 import pytest
 
-from asynctradier.common import Duration, OptionOrderSide, OrderType
+from asynctradier.common import Duration, OrderSide, OrderType
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.tradier import TradierClient
 
@@ -411,7 +411,7 @@ async def test_multileg(mocker, tradier_client):
             "2019-03-29",
             274.00,
             "call",
-            OptionOrderSide.buy_to_open,
+            OrderSide.buy_to_open,
             1,
         ),
         OptionContract(
@@ -419,7 +419,7 @@ async def test_multileg(mocker, tradier_client):
             "2019-03-29",
             270.00,
             "put",
-            OptionOrderSide.buy_to_open,
+            OrderSide.buy_to_open,
             1,
         ),
     ]

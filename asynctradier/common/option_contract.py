@@ -3,7 +3,7 @@ This module defines the OptionContract class, which represents an option contrac
 """
 
 
-from asynctradier.common import OptionOrderSide
+from asynctradier.common import OrderSide
 from asynctradier.exceptions import InvalidExiprationDate, InvalidOptionType
 from asynctradier.utils.common import (
     build_option_symbol,
@@ -21,7 +21,7 @@ class OptionContract:
         expiration_date (str): The expiration date of the option contract.
         strike (float): The strike price of the option contract.
         option_type (str): The type of the option contract (e.g., 'call', 'put').
-        order_side (OptionOrderSide): The order side of the option contract (e.g., 'buy', 'sell').
+        order_side (OrderSide): The order side of the option contract (e.g., 'buy', 'sell').
         quantity (int): The quantity of the option contract.
     """
 
@@ -31,7 +31,7 @@ class OptionContract:
         expiration_date: str,
         strike: float,
         option_type: str,
-        order_side: OptionOrderSide,
+        order_side: OrderSide,
         quantity: int,
     ) -> None:
         if not is_valid_expiration_date(expiration_date):
