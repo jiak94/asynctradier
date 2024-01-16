@@ -77,3 +77,15 @@ class BadRequestException(Exception):
 
     def __init__(self, code: int, msg: str) -> None:
         super().__init__(f"Request failed: {code}, msg: {msg}")
+
+
+class APINotAvailable(Exception):
+    """
+    Exception raised when the API is not available.
+
+    Attributes:
+        msg (str): The error message.
+    """
+
+    def __init__(self, msg: str) -> None:
+        super().__init__(f"API is not available. {msg}")

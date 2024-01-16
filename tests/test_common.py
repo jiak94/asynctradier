@@ -1,4 +1,7 @@
 from asynctradier.common import (
+    AccountStatus,
+    AccountType,
+    Classification,
     Duration,
     OptionType,
     OrderClass,
@@ -11,6 +14,7 @@ from asynctradier.common.expiration import Expiration
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.quote import Quote
+from asynctradier.common.user_profile import UserAccount
 from asynctradier.exceptions import InvalidExiprationDate, InvalidOptionType
 
 
@@ -574,3 +578,31 @@ def test_expirations():
     assert expirations.expiration_type == "weeklys"
     print(expirations.strikes)
     assert len(expirations.strikes) == len(expiration_info["strikes"])
+
+
+def test_userprofile():
+    userprofile_info = {
+        "id": "id-gcostanza",
+        "name": "George Costanza",
+        "account_number": "VA000001",
+        "classification": "individual",
+        "date_created": "2016-08-01T21:08:55.000Z",
+        "day_trader": False,
+        "option_level": 6,
+        "status": "active",
+        "type": "margin",
+        "last_update_date": "2016-08-01T21:08:55.000Z",
+    }
+
+    account = UserAccount(**userprofile_info)
+
+    assert account.id == "id-gcostanza"
+    assert account.name == "George Costanza"
+    assert account.account_number == "123456789"
+    assert account.classification == Classification.individual
+    assert account.date_created == "2018-06-01T12:02:29.682Z"
+    assert account.day_trader is False
+    assert account.option_level == 6
+    assert account.status == AccountStatus.active
+    assert account.type == AccountType.margin
+    assert account.last_update_date == "2018-06-01T12:02:29.682Z"

@@ -4,7 +4,7 @@ import pytest
 
 from asynctradier.common import Duration, OptionType, OrderSide, OrderType
 from asynctradier.common.option_contract import OptionContract
-from asynctradier.exceptions import InvalidExiprationDate
+from asynctradier.exceptions import APINotAvailable, InvalidExiprationDate
 from asynctradier.tradier import TradierClient
 
 
@@ -1296,3 +1296,73 @@ async def test_option_lookup_invalid_symbol(mocker, tradier_client):
     tradier_client.session.get.assert_called_once_with(
         "/v1/markets/options/lookup", params={"underlying": "SEFDF"}
     )
+
+
+@pytest.mark.asyncio
+async def test_get_user_profile(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {
+            "profile": {
+                "account": [
+                    {
+                        "account_number": "VA000001",
+                        "classification": "individual",
+                        "date_created": "2016-08-01T21:08:55.000Z",
+                        "day_trader": False,
+                        "option_level": 6,
+                        "status": "active",
+                        "type": "margin",
+                        "last_update_date": "2016-08-01T21:08:55.000Z",
+                    },
+                    {
+                        "account_number": "VA000002",
+                        "classification": "traditional_ira",
+                        "date_created": "2016-08-05T17:24:34.000Z",
+                        "day_trader": False,
+                        "option_level": 3,
+                        "status": "active",
+                        "type": "margin",
+                        "last_update_date": "2016-08-05T17:24:34.000Z",
+                    },
+                    {
+                        "account_number": "VA000003",
+                        "classification": "rollover_ira",
+                        "date_created": "2016-08-01T21:08:56.000Z",
+                        "day_trader": False,
+                        "option_level": 2,
+                        "status": "active",
+                        "type": "cash",
+                        "last_update_date": "2016-08-01T21:08:56.000Z",
+                    },
+                ],
+                "id": "id-gcostanza",
+                "name": "George Costanza",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    accounts = await tradier_client.get_user_profile()
+
+    assert len(accounts) == 3
+
+    for account, account_info in zip(accounts, mock_get("")["profile"]["account"]):
+        assert account.account_number == account_info["account_number"]
+        assert account.classification == account_info["classification"]
+        assert account.date_created == account_info["date_created"]
+        assert account.day_trader == account_info["day_trader"]
+        assert account.option_level == account_info["option_level"]
+        assert account.status == account_info["status"]
+        assert account.type == account_info["type"]
+        assert account.last_update_date == account_info["last_update_date"]
+
+    tradier_client.session.get.assert_called_once_with("/v1/user/profile")
+
+
+@pytest.mark.asyncio
+async def test_get_user_profile_sanbox(tradier_client):
+    try:
+        await tradier_client.get_user_profile()
+    except APINotAvailable:
+        assert True

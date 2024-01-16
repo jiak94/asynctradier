@@ -142,3 +142,52 @@ class OptionType(StrEnum):
 
     call = "call"
     put = "put"
+
+
+class Classification(StrEnum):
+    """
+    Enum class representing different classifications.
+
+    Possible values:
+    - individual
+    - entity
+    - joint_survivor
+    - traditional_ira
+    - roth_ira
+    - rollover_ira
+    - sep_ira
+    """
+
+    individual = "individual"
+    entity = "entity"
+    joint_survivor = "joint_survivor"
+    traditional_ira = "traditional_ira"
+    roth_ira = "roth_ira"
+    rollover_ira = "rollover_ira"
+    sep_ira = "sep_ira"
+
+
+class AccountStatus(StrEnum):
+    """
+    Represents the status of an account.
+
+    Attributes:
+        open (str): The account is open.
+        closed (str): The account is closed.
+    """
+
+    active = "active"
+    closed = "closed"
+
+
+class AccountType(StrEnum):
+    """
+    Represents the type of account.
+
+    Attributes:
+        cash (str): The account is a cash account.
+        margin (str): The account is a margin account.
+    """
+
+    cash = "cash"
+    margin = "margin"

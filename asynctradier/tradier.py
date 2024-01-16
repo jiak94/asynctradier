@@ -9,7 +9,9 @@ from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.position import Position
 from asynctradier.common.quote import Quote
+from asynctradier.common.user_profile import UserAccount
 from asynctradier.exceptions import (
+    APINotAvailable,
     InvalidExiprationDate,
     InvalidOptionType,
     InvalidParameter,
@@ -38,6 +40,7 @@ class TradierClient:
             "https://api.tradier.com" if not sandbox else "https://sandbox.tradier.com"
         )
         self.session = WebUtil(base_url, token)
+        self.sandbox = sandbox
 
     async def get_positions(self) -> List[Position]:
         """
@@ -627,3 +630,36 @@ class TradierClient:
         if response.get("symbols") is None:
             return []
         return response.get("symbols")[0].get("options", [])
+
+    async def get_user_profile(self) -> List[UserAccount]:
+        """
+        Retrieves the user profile information.
+
+        Returns:
+            A list of UserProfile objects representing the user's profile information.
+        """
+        if self.sandbox:
+            raise APINotAvailable("get user profile is only available in production")
+
+        url = "/v1/user/profile"
+        response = await self.session.get(url)
+
+        if response.get("profile") is None:
+            return []
+
+        if not isinstance(response["profile"]["account"], list):
+            accounts = [response["profile"]["account"]]
+        else:
+            accounts = response["profile"]["account"]
+
+        res: List[UserAccount] = []
+        for account in accounts:
+            res.append(
+                UserAccount(
+                    **account,
+                    id=response["profile"]["id"],
+                    name=response["profile"]["name"],
+                )
+            )
+
+        return res
