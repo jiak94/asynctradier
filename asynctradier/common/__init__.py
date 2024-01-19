@@ -142,3 +142,100 @@ class OptionType(StrEnum):
 
     call = "call"
     put = "put"
+
+
+class Classification(StrEnum):
+    """
+    Enum class representing different classifications.
+
+    Possible values:
+    - individual
+    - entity
+    - joint_survivor
+    - traditional_ira
+    - roth_ira
+    - rollover_ira
+    - sep_ira
+    """
+
+    individual = "individual"
+    entity = "entity"
+    joint_survivor = "joint_survivor"
+    traditional_ira = "traditional_ira"
+    roth_ira = "roth_ira"
+    rollover_ira = "rollover_ira"
+    sep_ira = "sep_ira"
+
+
+class AccountStatus(StrEnum):
+    """
+    Represents the status of an account.
+
+    Attributes:
+        open (str): The account is open.
+        closed (str): The account is closed.
+    """
+
+    active = "active"
+    closed = "closed"
+
+
+class AccountType(StrEnum):
+    """
+    Represents the type of account.
+
+    Attributes:
+        cash (str): The account is a cash account.
+        margin (str): The account is a margin account.
+        pdt (str): The account is a pattern day trader account.
+    """
+
+    cash = "cash"
+    margin = "margin"
+    pdt = "pdt"
+
+
+class EventType(StrEnum):
+    """
+    Represents the type of an event.
+
+    Attributes:
+        trade (str): The event is a trade event.
+        journal (str): The event is a journal event.
+        option (str): The event is an option event.
+        ach (str): The event is an ACH event.
+        wire (str): The event is a wire event.
+        dividend (str): The event is a dividend event.
+        fee (str): The event is a fee event.
+        tax (str): The event is a tax event.
+        check (str): The event is a check event.
+        transfer (str): The event is a transfer event.
+        adjustment (str): The event is an adjustment event.
+        interest (str): The event is an interest event.
+    """
+
+    trade = "trade"
+    journal = "journal"
+    option = "option"
+    ach = "ach"
+    wire = "wire"
+    dividend = "dividend"
+    fee = "fee"
+    tax = "tax"
+    check = "check"
+    transfer = "transfer"
+    adjustment = "adjustment"
+    interest = "interest"
+
+
+class TradeType(StrEnum):
+    """
+    Represents the type of a trade.
+
+    Attributes:
+        buy (str): The trade is a buy trade.
+        sell (str): The trade is a sell trade.
+    """
+
+    equity = "equity"
+    option = "option"

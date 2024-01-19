@@ -2,9 +2,20 @@ from unittest.mock import call
 
 import pytest
 
-from asynctradier.common import Duration, OptionType, OrderSide, OrderType
+from asynctradier.common import (
+    AccountType,
+    Duration,
+    EventType,
+    OptionType,
+    OrderSide,
+    OrderType,
+)
 from asynctradier.common.option_contract import OptionContract
-from asynctradier.exceptions import InvalidExiprationDate
+from asynctradier.exceptions import (
+    APINotAvailable,
+    InvalidDateFormat,
+    InvalidExiprationDate,
+)
 from asynctradier.tradier import TradierClient
 
 
@@ -1295,4 +1306,714 @@ async def test_option_lookup_invalid_symbol(mocker, tradier_client):
 
     tradier_client.session.get.assert_called_once_with(
         "/v1/markets/options/lookup", params={"underlying": "SEFDF"}
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_user_profile(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {
+            "profile": {
+                "account": [
+                    {
+                        "account_number": "VA000001",
+                        "classification": "individual",
+                        "date_created": "2016-08-01T21:08:55.000Z",
+                        "day_trader": False,
+                        "option_level": 6,
+                        "status": "active",
+                        "type": "margin",
+                        "last_update_date": "2016-08-01T21:08:55.000Z",
+                    },
+                    {
+                        "account_number": "VA000002",
+                        "classification": "traditional_ira",
+                        "date_created": "2016-08-05T17:24:34.000Z",
+                        "day_trader": False,
+                        "option_level": 3,
+                        "status": "active",
+                        "type": "margin",
+                        "last_update_date": "2016-08-05T17:24:34.000Z",
+                    },
+                    {
+                        "account_number": "VA000003",
+                        "classification": "rollover_ira",
+                        "date_created": "2016-08-01T21:08:56.000Z",
+                        "day_trader": False,
+                        "option_level": 2,
+                        "status": "active",
+                        "type": "cash",
+                        "last_update_date": "2016-08-01T21:08:56.000Z",
+                    },
+                ],
+                "id": "id-gcostanza",
+                "name": "George Costanza",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    accounts = await tradier_client.get_user_profile()
+
+    assert len(accounts) == 3
+
+    for account, account_info in zip(accounts, mock_get("")["profile"]["account"]):
+        assert account.account_number == account_info["account_number"]
+        assert account.classification == account_info["classification"]
+        assert account.date_created == account_info["date_created"]
+        assert account.day_trader == account_info["day_trader"]
+        assert account.option_level == account_info["option_level"]
+        assert account.status == account_info["status"]
+        assert account.type == account_info["type"]
+        assert account.last_update_date == account_info["last_update_date"]
+
+    tradier_client.session.get.assert_called_once_with("/v1/user/profile")
+
+
+@pytest.mark.asyncio
+async def test_get_user_profile_sanbox(tradier_client):
+    try:
+        await tradier_client.get_user_profile()
+    except APINotAvailable:
+        assert True
+
+
+@pytest.mark.asyncio
+async def test_get_balance_margin(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "balances": {
+                "option_short_value": 0,
+                "total_equity": 17798.360000000000000000000000,
+                "account_number": "VA00000000",
+                "account_type": "margin",
+                "close_pl": -4813.000000000000000000,
+                "current_requirement": 2557.00000000000000000000,
+                "equity": 0,
+                "long_market_value": 11434.50000000000000000000,
+                "market_value": 11434.50000000000000000000,
+                "open_pl": 546.900000000000000000000000,
+                "option_long_value": 8877.5000000000000000000,
+                "option_requirement": 0,
+                "pending_orders_count": 0,
+                "short_market_value": 0,
+                "stock_long_value": 2557.00000000000000000000,
+                "total_cash": 6363.860000000000000000000000,
+                "uncleared_funds": 0,
+                "pending_cash": 0,
+                "margin": {
+                    "fed_call": 0,
+                    "maintenance_call": 0,
+                    "option_buying_power": 6363.860000000000000000000000,
+                    "stock_buying_power": 12727.7200000000000000,
+                    "stock_short_value": 0,
+                    "sweep": 0,
+                },
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    balance = await tradier_client.get_balance()
+
+    assert balance.option_short_value == 0
+    assert balance.total_equity == 17798.360000000000000000000000
+    assert balance.account_number == "VA00000000"
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == -4813.000000000000000000
+    assert balance.current_requirement == 2557.00000000000000000000
+    assert balance.equity == 0
+    assert balance.long_market_value == 11434.50000000000000000000
+    assert balance.market_value == 11434.50000000000000000000
+    assert balance.open_pl == 546.900000000000000000000000
+    assert balance.option_long_value == 8877.5000000000000000000
+    assert balance.option_requirement == 0
+    assert balance.pending_orders_count == 0
+    assert balance.short_market_value == 0
+    assert balance.stock_long_value == 2557.00000000000000000000
+    assert balance.total_cash == 6363.860000000000000000000000
+    assert balance.uncleared_funds == 0
+    assert balance.pending_cash == 0
+    assert balance.margin.fed_call == 0
+    assert balance.margin.maintenance_call == 0
+    assert balance.margin.option_buying_power == 6363.860000000000000000000000
+    assert balance.margin.stock_buying_power == 12727.7200000000000000
+    assert balance.margin.stock_short_value == 0
+    assert balance.margin.sweep == 0
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/balances"
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_balance_cash(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "balances": {
+                "option_short_value": 0,
+                "total_equity": 17798.360000000000000000000000,
+                "account_number": "VA00000000",
+                "account_type": "margin",
+                "close_pl": -4813.000000000000000000,
+                "current_requirement": 2557.00000000000000000000,
+                "equity": 0,
+                "long_market_value": 11434.50000000000000000000,
+                "market_value": 11434.50000000000000000000,
+                "open_pl": 546.900000000000000000000000,
+                "option_long_value": 8877.5000000000000000000,
+                "option_requirement": 0,
+                "pending_orders_count": 0,
+                "short_market_value": 0,
+                "stock_long_value": 2557.00000000000000000000,
+                "total_cash": 6363.860000000000000000000000,
+                "uncleared_funds": 0,
+                "pending_cash": 0,
+                "cash": {
+                    "cash_available": 4343.38000000,
+                    "sweep": 0,
+                    "unsettled_funds": 1310.00000000,
+                },
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    balance = await tradier_client.get_balance()
+
+    assert balance.option_short_value == 0
+    assert balance.total_equity == 17798.360000000000000000000000
+    assert balance.account_number == "VA00000000"
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == -4813.000000000000000000
+    assert balance.current_requirement == 2557.00000000000000000000
+    assert balance.equity == 0
+    assert balance.long_market_value == 11434.50000000000000000000
+    assert balance.market_value == 11434.50000000000000000000
+    assert balance.open_pl == 546.900000000000000000000000
+    assert balance.option_long_value == 8877.5000000000000000000
+    assert balance.option_requirement == 0
+    assert balance.pending_orders_count == 0
+    assert balance.short_market_value == 0
+    assert balance.stock_long_value == 2557.00000000000000000000
+    assert balance.total_cash == 6363.860000000000000000000000
+    assert balance.uncleared_funds == 0
+    assert balance.pending_cash == 0
+
+    assert balance.cash.cash_available == 4343.38000000
+    assert balance.cash.sweep == 0
+    assert balance.cash.unsettled_funds == 1310.00000000
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/balances"
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_balance_pdt(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "balances": {
+                "option_short_value": 0,
+                "total_equity": 17798.360000000000000000000000,
+                "account_number": "VA00000000",
+                "account_type": "margin",
+                "close_pl": -4813.000000000000000000,
+                "current_requirement": 2557.00000000000000000000,
+                "equity": 0,
+                "long_market_value": 11434.50000000000000000000,
+                "market_value": 11434.50000000000000000000,
+                "open_pl": 546.900000000000000000000000,
+                "option_long_value": 8877.5000000000000000000,
+                "option_requirement": 0,
+                "pending_orders_count": 0,
+                "short_market_value": 0,
+                "stock_long_value": 2557.00000000000000000000,
+                "total_cash": 6363.860000000000000000000000,
+                "uncleared_funds": 0,
+                "pending_cash": 0,
+                "pdt": {
+                    "fed_call": 0,
+                    "maintenance_call": 0,
+                    "option_buying_power": 6363.860000000000000000000000,
+                    "stock_buying_power": 12727.7200000000000000,
+                    "stock_short_value": 0,
+                },
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    balance = await tradier_client.get_balance()
+
+    assert balance.option_short_value == 0
+    assert balance.total_equity == 17798.360000000000000000000000
+    assert balance.account_number == "VA00000000"
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == -4813.000000000000000000
+    assert balance.current_requirement == 2557.00000000000000000000
+    assert balance.equity == 0
+    assert balance.long_market_value == 11434.50000000000000000000
+    assert balance.market_value == 11434.50000000000000000000
+    assert balance.open_pl == 546.900000000000000000000000
+    assert balance.option_long_value == 8877.5000000000000000000
+    assert balance.option_requirement == 0
+    assert balance.pending_orders_count == 0
+    assert balance.short_market_value == 0
+    assert balance.stock_long_value == 2557.00000000000000000000
+    assert balance.total_cash == 6363.860000000000000000000000
+    assert balance.uncleared_funds == 0
+    assert balance.pending_cash == 0
+
+    assert balance.pdt.fed_call == 0
+    assert balance.pdt.maintenance_call == 0
+    assert balance.pdt.option_buying_power == 6363.860000000000000000000000
+    assert balance.pdt.stock_buying_power == 12727.7200000000000000
+    assert balance.pdt.stock_short_value == 0
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/balances"
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_history_single(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {
+            "history": {
+                "event": {
+                    "amount": -3000.00,
+                    "date": "2018-05-23T00:00:00Z",
+                    "type": "journal",
+                    "journal": {
+                        "description": "6YA-00005 TO 6YA-00102",
+                        "quantity": 0.00000000,
+                    },
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    history = await tradier_client.get_history()
+
+    assert len(history) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_history_multiple(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {
+            "history": {
+                "event": [
+                    {
+                        "amount": -3000.00,
+                        "date": "2018-05-23T00:00:00Z",
+                        "type": "journal",
+                        "journal": {
+                            "description": "6YA-00005 TO 6YA-00102",
+                            "quantity": 0.00000000,
+                        },
+                    },
+                    {
+                        "amount": 99.95,
+                        "date": "2018-05-23T00:00:00Z",
+                        "type": "trade",
+                        "trade": {
+                            "commission": 0.0000000000,
+                            "description": "CALL GE     06\/22\/18    14",  # noqa
+                            "price": 1.000000,
+                            "quantity": -1.00000000,
+                            "symbol": "GE180622C00014000",
+                            "trade_type": "Option",
+                        },
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    history = await tradier_client.get_history()
+
+    assert len(history) == 2
+
+
+@pytest.mark.asyncio()
+async def test_get_history_page(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_history(page=10)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 10, "limit": 25, "exactMatch": "false"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_limit(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_history(limit=10)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 1, "limit": 10, "exactMatch": "false"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_exact_match(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_history(exact_match=True)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 1, "limit": 25, "exactMatch": "true"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_type(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_history(event_type=EventType.trade)
+
+    for event_type in EventType:
+        await tradier_client.get_history(event_type=event_type)
+        tradier_client.session.get.assert_called_with(
+            f"/v1/accounts/{tradier_client.account_id}/history",
+            params={
+                "page": 1,
+                "limit": 25,
+                "type": event_type.value,
+                "exactMatch": "false",
+            },
+        )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_start(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_history(start="2020-01-01")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={
+            "page": 1,
+            "limit": 25,
+            "start": "2020-01-01",
+            "exactMatch": "false",
+        },
+    )
+
+    try:
+        await tradier_client.get_history(start="2020/01/01")
+    except InvalidDateFormat:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_history_end(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_history(end="2020-01-01")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 1, "limit": 25, "end": "2020-01-01", "exactMatch": "false"},
+    )
+
+    try:
+        await tradier_client.get_history(end="2020/01/01")
+    except InvalidDateFormat:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_history_symbol(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_history(symbol="AAPL")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 1, "limit": 25, "symbol": "AAPL", "exactMatch": "false"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_sanbox(mocker, tradier_client):
+    tradier_client.sandbox = True
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    try:
+        await tradier_client.get_history()
+    except APINotAvailable:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_single(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "gainloss": {
+                "closed_position": {
+                    "close_date": "2018-10-31T00:00:00.000Z",
+                    "cost": 12.7,
+                    "gain_loss": -2.64,
+                    "gain_loss_percent": -20.7874,
+                    "open_date": "2018-06-19T00:00:00.000Z",
+                    "proceeds": 10.06,
+                    "quantity": 1.0,
+                    "symbol": "GE",
+                    "term": 134,
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    gainloss = await tradier_client.get_gainloss()
+    assert len(gainloss) == 1
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={"page": 1, "limit": 25, "sortBy": "closeDate", "sort": "desc"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_multiple(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "gainloss": {
+                "closed_position": [
+                    {
+                        "close_date": "2018-10-31T00:00:00.000Z",
+                        "cost": 12.7,
+                        "gain_loss": -2.64,
+                        "gain_loss_percent": -20.7874,
+                        "open_date": "2018-06-19T00:00:00.000Z",
+                        "proceeds": 10.06,
+                        "quantity": 1.0,
+                        "symbol": "GE",
+                        "term": 134,
+                    },
+                    {
+                        "close_date": "2018-10-31T00:00:00.000Z",
+                        "cost": 12.7,
+                        "gain_loss": -2.64,
+                        "gain_loss_percent": -20.7874,
+                        "open_date": "2018-06-19T00:00:00.000Z",
+                        "proceeds": 10.06,
+                        "quantity": 1.0,
+                        "symbol": "GE",
+                        "term": 134,
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    gainloss = await tradier_client.get_gainloss()
+    assert len(gainloss) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={"page": 1, "limit": 25, "sortBy": "closeDate", "sort": "desc"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_page(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_gainloss(page=10)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={"page": 10, "limit": 25, "sortBy": "closeDate", "sort": "desc"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_limit(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_gainloss(limit=10)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={"page": 1, "limit": 10, "sortBy": "closeDate", "sort": "desc"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_sort_by(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(sort_by_close_date=True)
+    tradier_client.session.get.assert_called_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+        },
+    )
+
+    await tradier_client.get_gainloss(sort_by_close_date=False)
+    tradier_client.session.get.assert_called_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "openDate",
+            "sort": "desc",
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_sort(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(desc=True)
+    tradier_client.session.get.assert_called_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+        },
+    )
+
+    await tradier_client.get_gainloss(desc=False)
+    tradier_client.session.get.assert_called_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "asc",
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_start(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(start="2020-01-01")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+            "start": "2020-01-01",
+        },
+    )
+
+    try:
+        await tradier_client.get_gainloss(start="2020/01/01")
+    except InvalidDateFormat:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_end(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(end="2020-01-01")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+            "end": "2020-01-01",
+        },
+    )
+
+    try:
+        await tradier_client.get_gainloss(end="2020/01/01")
+    except InvalidDateFormat:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_symbol(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(symbol="AAPL")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+            "symbol": "AAPL",
+        },
     )

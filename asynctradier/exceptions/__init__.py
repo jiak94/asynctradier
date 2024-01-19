@@ -77,3 +77,29 @@ class BadRequestException(Exception):
 
     def __init__(self, code: int, msg: str) -> None:
         super().__init__(f"Request failed: {code}, msg: {msg}")
+
+
+class APINotAvailable(Exception):
+    """
+    Exception raised when the API is not available.
+
+    Attributes:
+        msg (str): The error message.
+    """
+
+    def __init__(self, msg: str) -> None:
+        super().__init__(f"API is not available. {msg}")
+
+
+class InvalidDateFormat(Exception):
+    """
+    Exception raised when the date format is not valid.
+
+    Attributes:
+        date (str): The invalid date.
+    """
+
+    def __init__(self, date: str) -> None:
+        super().__init__(
+            f"Date format {date} is not valid. Valid values is: YYYY-MM-DD"
+        )
