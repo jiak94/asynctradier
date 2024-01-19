@@ -2,9 +2,20 @@ from unittest.mock import call
 
 import pytest
 
-from asynctradier.common import AccountType, Duration, OptionType, OrderSide, OrderType
+from asynctradier.common import (
+    AccountType,
+    Duration,
+    EventType,
+    OptionType,
+    OrderSide,
+    OrderType,
+)
 from asynctradier.common.option_contract import OptionContract
-from asynctradier.exceptions import APINotAvailable, InvalidExiprationDate
+from asynctradier.exceptions import (
+    APINotAvailable,
+    InvalidDateFormat,
+    InvalidExiprationDate,
+)
 from asynctradier.tradier import TradierClient
 
 
@@ -1564,3 +1575,216 @@ async def test_get_balance_pdt(mocker, tradier_client):
     tradier_client.session.get.assert_called_once_with(
         f"/v1/accounts/{tradier_client.account_id}/balances"
     )
+
+
+@pytest.mark.asyncio
+async def test_get_history_single(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {
+            "history": {
+                "event": {
+                    "amount": -3000.00,
+                    "date": "2018-05-23T00:00:00Z",
+                    "type": "journal",
+                    "journal": {
+                        "description": "6YA-00005 TO 6YA-00102",
+                        "quantity": 0.00000000,
+                    },
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    history = await tradier_client.get_history()
+
+    assert len(history) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_history_multiple(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {
+            "history": {
+                "event": [
+                    {
+                        "amount": -3000.00,
+                        "date": "2018-05-23T00:00:00Z",
+                        "type": "journal",
+                        "journal": {
+                            "description": "6YA-00005 TO 6YA-00102",
+                            "quantity": 0.00000000,
+                        },
+                    },
+                    {
+                        "amount": 99.95,
+                        "date": "2018-05-23T00:00:00Z",
+                        "type": "trade",
+                        "trade": {
+                            "commission": 0.0000000000,
+                            "description": "CALL GE     06\/22\/18    14",  # noqa
+                            "price": 1.000000,
+                            "quantity": -1.00000000,
+                            "symbol": "GE180622C00014000",
+                            "trade_type": "Option",
+                        },
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    history = await tradier_client.get_history()
+
+    assert len(history) == 2
+
+
+@pytest.mark.asyncio()
+async def test_get_history_page(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_history(page=10)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 10, "limit": 25, "exactMatch": "false"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_limit(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_history(limit=10)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 1, "limit": 10, "exactMatch": "false"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_exact_match(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_history(exact_match=True)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 1, "limit": 25, "exactMatch": "true"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_type(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_history(event_type=EventType.trade)
+
+    for event_type in EventType:
+        await tradier_client.get_history(event_type=event_type)
+        tradier_client.session.get.assert_called_with(
+            f"/v1/accounts/{tradier_client.account_id}/history",
+            params={
+                "page": 1,
+                "limit": 25,
+                "type": event_type.value,
+                "exactMatch": "false",
+            },
+        )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_start(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_history(start="2020-01-01")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={
+            "page": 1,
+            "limit": 25,
+            "start": "2020-01-01",
+            "exactMatch": "false",
+        },
+    )
+
+    try:
+        await tradier_client.get_history(start="2020/01/01")
+    except InvalidDateFormat:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_history_end(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_history(end="2020-01-01")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 1, "limit": 25, "end": "2020-01-01", "exactMatch": "false"},
+    )
+
+    try:
+        await tradier_client.get_history(end="2020/01/01")
+    except InvalidDateFormat:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_history_symbol(mocker, tradier_client):
+    tradier_client.sandbox = False
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_history(symbol="AAPL")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/history",
+        params={"page": 1, "limit": 25, "symbol": "AAPL", "exactMatch": "false"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_history_sanbox(mocker, tradier_client):
+    tradier_client.sandbox = True
+
+    def mock_get(path: str, params: dict = None):
+        return {"history": {"event": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    try:
+        await tradier_client.get_history()
+    except APINotAvailable:
+        assert True

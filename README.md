@@ -25,13 +25,13 @@ if your are using poetry
 
 ### Account
 
-:white_square_button: Get User Profile
+:white_check_mark: Get User Profile
 
-:white_square_button: Get Balances
+:white_check_mark: Get Balances
 
 :white_check_mark: Get Positions
 
-:white_square_button: Get History
+:white_check_mark: Get History
 
 :white_square_button: Get Gain/Loss
 

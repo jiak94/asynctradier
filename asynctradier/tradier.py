@@ -3,8 +3,16 @@ from typing import AsyncIterator, List, Optional
 
 import websockets
 
-from asynctradier.common import Duration, OptionType, OrderClass, OrderSide, OrderType
+from asynctradier.common import (
+    Duration,
+    EventType,
+    OptionType,
+    OrderClass,
+    OrderSide,
+    OrderType,
+)
 from asynctradier.common.account_balance import AccountBalance
+from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
@@ -13,6 +21,7 @@ from asynctradier.common.quote import Quote
 from asynctradier.common.user_profile import UserAccount
 from asynctradier.exceptions import (
     APINotAvailable,
+    InvalidDateFormat,
     InvalidExiprationDate,
     InvalidOptionType,
     InvalidParameter,
@@ -640,7 +649,9 @@ class TradierClient:
             A list of UserProfile objects representing the user's profile information.
         """
         if self.sandbox:
-            raise APINotAvailable("get user profile is only available in production")
+            raise APINotAvailable(
+                "please check the documentation for more details: https://documentation.tradier.com/brokerage-api/user/get-profile"
+            )
 
         url = "/v1/user/profile"
         response = await self.session.get(url)
@@ -677,3 +688,77 @@ class TradierClient:
         return AccountBalance(
             **response["balances"],
         )
+
+    async def get_history(
+        self,
+        page: int = 1,
+        limit: int = 25,
+        event_type: Optional[EventType] = None,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        symbol: Optional[str] = None,
+        exact_match: bool = False,
+    ) -> List[Event]:
+        if self.sandbox:
+            raise APINotAvailable(
+                "please check the documentation for more details: https://documentation.tradier.com/brokerage-api/accounts/get-account-balance"
+            )
+
+        if start is not None and not is_valid_expiration_date(start):
+            raise InvalidDateFormat(start)
+
+        if end is not None and not is_valid_expiration_date(end):
+            raise InvalidDateFormat(end)
+
+        if page is None or page < 1:
+            page = 1
+
+        if limit is None or limit < 1:
+            limit = 25
+
+        if exact_match is None:
+            exact_match = False
+
+        url = f"/v1/accounts/{self.account_id}/history"
+
+        params = {
+            "page": page,
+            "limit": limit,
+            "exactMatch": str(exact_match).lower(),
+        }
+
+        if event_type is not None:
+            params["type"] = event_type.value
+
+        if start is not None:
+            params["start"] = start
+
+        if end is not None:
+            params["end"] = end
+
+        if symbol is not None:
+            params["symbol"] = symbol
+
+        response = await self.session.get(url, params=params)
+
+        if response.get("history") is None:
+            return []
+
+        if response["history"].get("event") is None:
+            return []
+
+        if not isinstance(response["history"]["event"], list):
+            events = [response["history"]["event"]]
+        else:
+            events = response["history"]["event"]
+
+        results: List[Event] = []
+
+        for event in events:
+            results.append(
+                Event(
+                    **event,
+                )
+            )
+
+        return results

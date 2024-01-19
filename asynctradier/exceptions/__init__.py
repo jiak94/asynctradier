@@ -89,3 +89,17 @@ class APINotAvailable(Exception):
 
     def __init__(self, msg: str) -> None:
         super().__init__(f"API is not available. {msg}")
+
+
+class InvalidDateFormat(Exception):
+    """
+    Exception raised when the date format is not valid.
+
+    Attributes:
+        date (str): The invalid date.
+    """
+
+    def __init__(self, date: str) -> None:
+        super().__init__(
+            f"Date format {date} is not valid. Valid values is: YYYY-MM-DD"
+        )

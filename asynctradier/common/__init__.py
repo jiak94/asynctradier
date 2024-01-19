@@ -193,3 +193,49 @@ class AccountType(StrEnum):
     cash = "cash"
     margin = "margin"
     pdt = "pdt"
+
+
+class EventType(StrEnum):
+    """
+    Represents the type of an event.
+
+    Attributes:
+        trade (str): The event is a trade event.
+        journal (str): The event is a journal event.
+        option (str): The event is an option event.
+        ach (str): The event is an ACH event.
+        wire (str): The event is a wire event.
+        dividend (str): The event is a dividend event.
+        fee (str): The event is a fee event.
+        tax (str): The event is a tax event.
+        check (str): The event is a check event.
+        transfer (str): The event is a transfer event.
+        adjustment (str): The event is an adjustment event.
+        interest (str): The event is an interest event.
+    """
+
+    trade = "trade"
+    journal = "journal"
+    option = "option"
+    ach = "ach"
+    wire = "wire"
+    dividend = "dividend"
+    fee = "fee"
+    tax = "tax"
+    check = "check"
+    transfer = "transfer"
+    adjustment = "adjustment"
+    interest = "interest"
+
+
+class TradeType(StrEnum):
+    """
+    Represents the type of a trade.
+
+    Attributes:
+        buy (str): The trade is a buy trade.
+        sell (str): The trade is a sell trade.
+    """
+
+    equity = "Equity"
+    option = "Option"

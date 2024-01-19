@@ -3,6 +3,7 @@ from asynctradier.common import (
     AccountType,
     Classification,
     Duration,
+    EventType,
     OptionType,
     OrderClass,
     OrderSide,
@@ -16,6 +17,7 @@ from asynctradier.common.account_balance import (
     MarginAccountBalanceDetails,
     PDTAccountBalanceDetails,
 )
+from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
@@ -839,3 +841,103 @@ def test_balance_pdt():
 
     assert balance.margin is None
     assert balance.cash is None
+
+
+def test_event_trade():
+    detail = {
+        "amount": 54.90,
+        "date": "2024-01-17T00:00:00Z",
+        "type": "trade",
+        "trade": {
+            "commission": 0.0000000000,
+            "description": "CALL TSLA   01/19/24   226.67",
+            "price": 0.550000,
+            "quantity": -1.00000000,
+            "symbol": "TSLA240119C00226670",
+            "trade_type": "option",
+        },
+    }
+
+    event = Event(**detail)
+
+    assert event.amount == detail["amount"]
+    assert event.date == detail["date"]
+    assert event.type == EventType.trade
+    assert event.commision == detail["trade"]["commission"]
+    assert event.description == detail["trade"]["description"]
+    assert event.price == detail["trade"]["price"]
+    assert event.quantity == detail["trade"]["quantity"]
+    assert event.symbol == detail["trade"]["symbol"]
+    assert event.trade_type == detail["trade"]["trade_type"]
+
+
+def test_event_ach():
+    detail = {
+        "amount": 3000.00,
+        "date": "2023-12-19T00:00:00Z",
+        "type": "ach",
+        "ach": {"description": "ACH DEPOSIT", "quantity": 0.00000000},
+    }
+
+    event = Event(**detail)
+
+    assert event.amount == detail["amount"]
+    assert event.date == detail["date"]
+    assert event.type == EventType.ach
+    assert event.description == detail["ach"]["description"]
+    assert event.quantity == detail["ach"]["quantity"]
+
+
+def test_event_dividend():
+    detail = {
+        "amount": 0.12,
+        "date": "2018-10-25T00:00:00Z",
+        "type": "dividend",
+        "dividend": {"description": "GENERAL ELECTRIC COMPANY", "quantity": 0.00000000},
+    }
+
+    event = Event(**detail)
+
+    assert event.amount == detail["amount"]
+    assert event.date == detail["date"]
+    assert event.type == EventType.dividend
+    assert event.description == detail["dividend"]["description"]
+    assert event.quantity == detail["dividend"]["quantity"]
+
+
+def test_event_option():
+    detail = {
+        "amount": 0,
+        "date": "2018-09-21T00:00:00Z",
+        "type": "option",
+        "option": {
+            "option_type": "OPTEXP",
+            "description": "Expired",
+            "quantity": -1.00000000,
+        },
+    }
+
+    event = Event(**detail)
+
+    assert event.amount == detail["amount"]
+    assert event.date == detail["date"]
+    assert event.type == EventType.option
+    assert event.description == detail["option"]["description"]
+    assert event.quantity == detail["option"]["quantity"]
+
+
+def test_journal():
+    detail = {
+        "amount": -3000.00,
+        "date": "2018-05-23T00:00:00Z",
+        "type": "journal",
+        "journal": {"description": "6YA-00005 TO 6YA-00102", "quantity": 0.00000000},
+    }
+
+    event = Event(**detail)
+
+    assert event.amount == detail["amount"]
+    assert event.date == detail["date"]
+    assert event.type == EventType.journal
+    assert event.description == detail["journal"]["description"]
+    assert event.quantity == detail["journal"]["quantity"]
