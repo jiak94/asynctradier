@@ -33,7 +33,7 @@ if your are using poetry
 
 :white_check_mark: Get History
 
-:white_square_button: Get Gain/Loss
+:white_check_mark: Get Gain/Loss
 
 :white_check_mark: Get Orders
 
