@@ -10,6 +10,12 @@ from asynctradier.common import (
     OrderType,
     QuoteType,
 )
+from asynctradier.common.account_balance import (
+    AccountBalance,
+    CashAccountBalanceDetails,
+    MarginAccountBalanceDetails,
+    PDTAccountBalanceDetails,
+)
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
@@ -596,13 +602,240 @@ def test_userprofile():
 
     account = UserAccount(**userprofile_info)
 
-    assert account.id == "id-gcostanza"
-    assert account.name == "George Costanza"
-    assert account.account_number == "123456789"
+    assert account.id == userprofile_info["id"]
+    assert account.name == userprofile_info["name"]
+    assert account.account_number == userprofile_info["account_number"]
     assert account.classification == Classification.individual
-    assert account.date_created == "2018-06-01T12:02:29.682Z"
+    assert account.date_created == userprofile_info["date_created"]
     assert account.day_trader is False
     assert account.option_level == 6
     assert account.status == AccountStatus.active
     assert account.type == AccountType.margin
-    assert account.last_update_date == "2018-06-01T12:02:29.682Z"
+    assert account.last_update_date == userprofile_info["last_update_date"]
+
+
+def test_cashbalancedetail():
+    detail_info = {
+        "cash_available": 4343.38000000,
+        "sweep": 0,
+        "unsettled_funds": 1310.00000000,
+    }
+
+    detail = CashAccountBalanceDetails(**detail_info)
+
+    assert detail.cash_available == 4343.38000000
+    assert detail.sweep == 0
+    assert detail.unsettled_funds == 1310.00000000
+
+
+def test_marginbalancedetail():
+    detail = {
+        "fed_call": 0,
+        "maintenance_call": 0,
+        "option_buying_power": 6363.860000000000000000000000,
+        "stock_buying_power": 12727.7200000000000000,
+        "stock_short_value": 0,
+        "sweep": 0,
+    }
+
+    detail = MarginAccountBalanceDetails(**detail)
+
+    assert detail.fed_call == 0
+    assert detail.maintenance_call == 0
+    assert detail.option_buying_power == 6363.860000000000000000000000
+    assert detail.stock_buying_power == 12727.7200000000000000
+    assert detail.stock_short_value == 0
+    assert detail.sweep == 0
+
+
+def test_pdfbalancedetail():
+    detail = {
+        "fed_call": 0,
+        "maintenance_call": 0,
+        "option_buying_power": 6363.860000000000000000000000,
+        "stock_buying_power": 12727.7200000000000000,
+        "stock_short_value": 0,
+    }
+
+    detail = PDTAccountBalanceDetails(**detail)
+
+    assert detail.fed_call == 0
+    assert detail.maintenance_call == 0
+    assert detail.option_buying_power == 6363.860000000000000000000000
+    assert detail.stock_buying_power == 12727.7200000000000000
+    assert detail.stock_short_value == 0
+
+
+def test_balance_margin():
+    detail = {
+        "option_short_value": 0,
+        "total_equity": 17798.360000000000000000000000,
+        "account_number": "VA00000000",
+        "account_type": "margin",
+        "close_pl": -4813.000000000000000000,
+        "current_requirement": 2557.00000000000000000000,
+        "equity": 0,
+        "long_market_value": 11434.50000000000000000000,
+        "market_value": 11434.50000000000000000000,
+        "open_pl": 546.900000000000000000000000,
+        "option_long_value": 8877.5000000000000000000,
+        "option_requirement": 0,
+        "pending_orders_count": 0,
+        "short_market_value": 0,
+        "stock_long_value": 2557.00000000000000000000,
+        "total_cash": 6363.860000000000000000000000,
+        "uncleared_funds": 0,
+        "pending_cash": 0,
+        "margin": {
+            "fed_call": 0,
+            "maintenance_call": 0,
+            "option_buying_power": 6363.860000000000000000000000,
+            "stock_buying_power": 12727.7200000000000000,
+            "stock_short_value": 0,
+            "sweep": 0,
+        },
+    }
+
+    balance = AccountBalance(**detail)
+
+    assert balance.option_short_value == detail["option_short_value"]
+    assert balance.total_equity == detail["total_equity"]
+    assert balance.account_number == detail["account_number"]
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == detail["close_pl"]
+    assert balance.current_requirement == detail["current_requirement"]
+    assert balance.equity == detail["equity"]
+    assert balance.long_market_value == detail["long_market_value"]
+    assert balance.market_value == detail["market_value"]
+    assert balance.open_pl == detail["open_pl"]
+    assert balance.option_long_value == detail["option_long_value"]
+    assert balance.option_requirement == detail["option_requirement"]
+    assert balance.pending_orders_count == detail["pending_orders_count"]
+    assert balance.short_market_value == detail["short_market_value"]
+    assert balance.stock_long_value == detail["stock_long_value"]
+    assert balance.total_cash == detail["total_cash"]
+    assert balance.uncleared_funds == detail["uncleared_funds"]
+    assert balance.pending_cash == detail["pending_cash"]
+
+    assert balance.margin.fed_call == detail["margin"]["fed_call"]
+    assert balance.margin.maintenance_call == detail["margin"]["maintenance_call"]
+    assert balance.margin.option_buying_power == detail["margin"]["option_buying_power"]
+    assert balance.margin.stock_buying_power == detail["margin"]["stock_buying_power"]
+    assert balance.margin.stock_short_value == detail["margin"]["stock_short_value"]
+    assert balance.margin.sweep == detail["margin"]["sweep"]
+
+    assert balance.cash is None
+    assert balance.pdt is None
+
+
+def test_balance_cash():
+    detail = {
+        "option_short_value": 0,
+        "total_equity": 17798.360000000000000000000000,
+        "account_number": "VA00000000",
+        "account_type": "margin",
+        "close_pl": -4813.000000000000000000,
+        "current_requirement": 2557.00000000000000000000,
+        "equity": 0,
+        "long_market_value": 11434.50000000000000000000,
+        "market_value": 11434.50000000000000000000,
+        "open_pl": 546.900000000000000000000000,
+        "option_long_value": 8877.5000000000000000000,
+        "option_requirement": 0,
+        "pending_orders_count": 0,
+        "short_market_value": 0,
+        "stock_long_value": 2557.00000000000000000000,
+        "total_cash": 6363.860000000000000000000000,
+        "uncleared_funds": 0,
+        "pending_cash": 0,
+        "cash": {
+            "cash_available": 4343.38000000,
+            "sweep": 0,
+            "unsettled_funds": 1310.00000000,
+        },
+    }
+
+    balance = AccountBalance(**detail)
+
+    assert balance.option_short_value == detail["option_short_value"]
+    assert balance.total_equity == detail["total_equity"]
+    assert balance.account_number == detail["account_number"]
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == detail["close_pl"]
+    assert balance.current_requirement == detail["current_requirement"]
+    assert balance.equity == detail["equity"]
+    assert balance.long_market_value == detail["long_market_value"]
+    assert balance.market_value == detail["market_value"]
+    assert balance.open_pl == detail["open_pl"]
+    assert balance.option_long_value == detail["option_long_value"]
+    assert balance.option_requirement == detail["option_requirement"]
+    assert balance.pending_orders_count == detail["pending_orders_count"]
+    assert balance.short_market_value == detail["short_market_value"]
+    assert balance.stock_long_value == detail["stock_long_value"]
+    assert balance.total_cash == detail["total_cash"]
+    assert balance.uncleared_funds == detail["uncleared_funds"]
+    assert balance.pending_cash == detail["pending_cash"]
+
+    assert balance.cash.cash_available == detail["cash"]["cash_available"]
+    assert balance.cash.sweep == detail["cash"]["sweep"]
+    assert balance.cash.unsettled_funds == detail["cash"]["unsettled_funds"]
+
+    assert balance.margin is None
+    assert balance.pdt is None
+
+
+def test_balance_pdt():
+    detail = {
+        "option_short_value": 0,
+        "total_equity": 17798.360000000000000000000000,
+        "account_number": "VA00000000",
+        "account_type": "margin",
+        "close_pl": -4813.000000000000000000,
+        "current_requirement": 2557.00000000000000000000,
+        "equity": 0,
+        "long_market_value": 11434.50000000000000000000,
+        "market_value": 11434.50000000000000000000,
+        "open_pl": 546.900000000000000000000000,
+        "option_long_value": 8877.5000000000000000000,
+        "option_requirement": 0,
+        "pending_orders_count": 0,
+        "short_market_value": 0,
+        "stock_long_value": 2557.00000000000000000000,
+        "total_cash": 6363.860000000000000000000000,
+        "uncleared_funds": 0,
+        "pending_cash": 0,
+        "pdt": {
+            "fed_call": 0,
+            "maintenance_call": 0,
+            "option_buying_power": 6363.860000000000000000000000,
+            "stock_buying_power": 12727.7200000000000000,
+            "stock_short_value": 0,
+        },
+    }
+    balance = AccountBalance(**detail)
+
+    assert balance.option_short_value == detail["option_short_value"]
+    assert balance.total_equity == detail["total_equity"]
+    assert balance.account_number == detail["account_number"]
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == detail["close_pl"]
+    assert balance.current_requirement == detail["current_requirement"]
+    assert balance.equity == detail["equity"]
+    assert balance.long_market_value == detail["long_market_value"]
+    assert balance.market_value == detail["market_value"]
+    assert balance.open_pl == detail["open_pl"]
+    assert balance.option_long_value == detail["option_long_value"]
+    assert balance.option_requirement == detail["option_requirement"]
+    assert balance.pending_orders_count == detail["pending_orders_count"]
+    assert balance.short_market_value == detail["short_market_value"]
+    assert balance.stock_long_value == detail["stock_long_value"]
+    assert balance.total_cash == detail["total_cash"]
+    assert balance.uncleared_funds == detail["uncleared_funds"]
+    assert balance.pending_cash == detail["pending_cash"]
+
+    assert balance.pdt.fed_call == detail["pdt"]["fed_call"]
+    assert balance.pdt.maintenance_call == detail["pdt"]["maintenance_call"]
+    assert balance.pdt.option_buying_power == detail["pdt"]["option_buying_power"]
+
+    assert balance.margin is None
+    assert balance.cash is None

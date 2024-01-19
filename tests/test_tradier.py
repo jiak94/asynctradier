@@ -2,7 +2,7 @@ from unittest.mock import call
 
 import pytest
 
-from asynctradier.common import Duration, OptionType, OrderSide, OrderType
+from asynctradier.common import AccountType, Duration, OptionType, OrderSide, OrderType
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.exceptions import APINotAvailable, InvalidExiprationDate
 from asynctradier.tradier import TradierClient
@@ -1366,3 +1366,201 @@ async def test_get_user_profile_sanbox(tradier_client):
         await tradier_client.get_user_profile()
     except APINotAvailable:
         assert True
+
+
+@pytest.mark.asyncio
+async def test_get_balance_margin(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "balances": {
+                "option_short_value": 0,
+                "total_equity": 17798.360000000000000000000000,
+                "account_number": "VA00000000",
+                "account_type": "margin",
+                "close_pl": -4813.000000000000000000,
+                "current_requirement": 2557.00000000000000000000,
+                "equity": 0,
+                "long_market_value": 11434.50000000000000000000,
+                "market_value": 11434.50000000000000000000,
+                "open_pl": 546.900000000000000000000000,
+                "option_long_value": 8877.5000000000000000000,
+                "option_requirement": 0,
+                "pending_orders_count": 0,
+                "short_market_value": 0,
+                "stock_long_value": 2557.00000000000000000000,
+                "total_cash": 6363.860000000000000000000000,
+                "uncleared_funds": 0,
+                "pending_cash": 0,
+                "margin": {
+                    "fed_call": 0,
+                    "maintenance_call": 0,
+                    "option_buying_power": 6363.860000000000000000000000,
+                    "stock_buying_power": 12727.7200000000000000,
+                    "stock_short_value": 0,
+                    "sweep": 0,
+                },
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    balance = await tradier_client.get_balance()
+
+    assert balance.option_short_value == 0
+    assert balance.total_equity == 17798.360000000000000000000000
+    assert balance.account_number == "VA00000000"
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == -4813.000000000000000000
+    assert balance.current_requirement == 2557.00000000000000000000
+    assert balance.equity == 0
+    assert balance.long_market_value == 11434.50000000000000000000
+    assert balance.market_value == 11434.50000000000000000000
+    assert balance.open_pl == 546.900000000000000000000000
+    assert balance.option_long_value == 8877.5000000000000000000
+    assert balance.option_requirement == 0
+    assert balance.pending_orders_count == 0
+    assert balance.short_market_value == 0
+    assert balance.stock_long_value == 2557.00000000000000000000
+    assert balance.total_cash == 6363.860000000000000000000000
+    assert balance.uncleared_funds == 0
+    assert balance.pending_cash == 0
+    assert balance.margin.fed_call == 0
+    assert balance.margin.maintenance_call == 0
+    assert balance.margin.option_buying_power == 6363.860000000000000000000000
+    assert balance.margin.stock_buying_power == 12727.7200000000000000
+    assert balance.margin.stock_short_value == 0
+    assert balance.margin.sweep == 0
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/balances"
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_balance_cash(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "balances": {
+                "option_short_value": 0,
+                "total_equity": 17798.360000000000000000000000,
+                "account_number": "VA00000000",
+                "account_type": "margin",
+                "close_pl": -4813.000000000000000000,
+                "current_requirement": 2557.00000000000000000000,
+                "equity": 0,
+                "long_market_value": 11434.50000000000000000000,
+                "market_value": 11434.50000000000000000000,
+                "open_pl": 546.900000000000000000000000,
+                "option_long_value": 8877.5000000000000000000,
+                "option_requirement": 0,
+                "pending_orders_count": 0,
+                "short_market_value": 0,
+                "stock_long_value": 2557.00000000000000000000,
+                "total_cash": 6363.860000000000000000000000,
+                "uncleared_funds": 0,
+                "pending_cash": 0,
+                "cash": {
+                    "cash_available": 4343.38000000,
+                    "sweep": 0,
+                    "unsettled_funds": 1310.00000000,
+                },
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    balance = await tradier_client.get_balance()
+
+    assert balance.option_short_value == 0
+    assert balance.total_equity == 17798.360000000000000000000000
+    assert balance.account_number == "VA00000000"
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == -4813.000000000000000000
+    assert balance.current_requirement == 2557.00000000000000000000
+    assert balance.equity == 0
+    assert balance.long_market_value == 11434.50000000000000000000
+    assert balance.market_value == 11434.50000000000000000000
+    assert balance.open_pl == 546.900000000000000000000000
+    assert balance.option_long_value == 8877.5000000000000000000
+    assert balance.option_requirement == 0
+    assert balance.pending_orders_count == 0
+    assert balance.short_market_value == 0
+    assert balance.stock_long_value == 2557.00000000000000000000
+    assert balance.total_cash == 6363.860000000000000000000000
+    assert balance.uncleared_funds == 0
+    assert balance.pending_cash == 0
+
+    assert balance.cash.cash_available == 4343.38000000
+    assert balance.cash.sweep == 0
+    assert balance.cash.unsettled_funds == 1310.00000000
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/balances"
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_balance_pdt(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "balances": {
+                "option_short_value": 0,
+                "total_equity": 17798.360000000000000000000000,
+                "account_number": "VA00000000",
+                "account_type": "margin",
+                "close_pl": -4813.000000000000000000,
+                "current_requirement": 2557.00000000000000000000,
+                "equity": 0,
+                "long_market_value": 11434.50000000000000000000,
+                "market_value": 11434.50000000000000000000,
+                "open_pl": 546.900000000000000000000000,
+                "option_long_value": 8877.5000000000000000000,
+                "option_requirement": 0,
+                "pending_orders_count": 0,
+                "short_market_value": 0,
+                "stock_long_value": 2557.00000000000000000000,
+                "total_cash": 6363.860000000000000000000000,
+                "uncleared_funds": 0,
+                "pending_cash": 0,
+                "pdt": {
+                    "fed_call": 0,
+                    "maintenance_call": 0,
+                    "option_buying_power": 6363.860000000000000000000000,
+                    "stock_buying_power": 12727.7200000000000000,
+                    "stock_short_value": 0,
+                },
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    balance = await tradier_client.get_balance()
+
+    assert balance.option_short_value == 0
+    assert balance.total_equity == 17798.360000000000000000000000
+    assert balance.account_number == "VA00000000"
+    assert balance.account_type == AccountType.margin
+    assert balance.close_pl == -4813.000000000000000000
+    assert balance.current_requirement == 2557.00000000000000000000
+    assert balance.equity == 0
+    assert balance.long_market_value == 11434.50000000000000000000
+    assert balance.market_value == 11434.50000000000000000000
+    assert balance.open_pl == 546.900000000000000000000000
+    assert balance.option_long_value == 8877.5000000000000000000
+    assert balance.option_requirement == 0
+    assert balance.pending_orders_count == 0
+    assert balance.short_market_value == 0
+    assert balance.stock_long_value == 2557.00000000000000000000
+    assert balance.total_cash == 6363.860000000000000000000000
+    assert balance.uncleared_funds == 0
+    assert balance.pending_cash == 0
+
+    assert balance.pdt.fed_call == 0
+    assert balance.pdt.maintenance_call == 0
+    assert balance.pdt.option_buying_power == 6363.860000000000000000000000
+    assert balance.pdt.stock_buying_power == 12727.7200000000000000
+    assert balance.pdt.stock_short_value == 0
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/balances"
+    )

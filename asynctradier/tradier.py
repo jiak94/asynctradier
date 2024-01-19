@@ -4,6 +4,7 @@ from typing import AsyncIterator, List, Optional
 import websockets
 
 from asynctradier.common import Duration, OptionType, OrderClass, OrderSide, OrderType
+from asynctradier.common.account_balance import AccountBalance
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
@@ -663,3 +664,16 @@ class TradierClient:
             )
 
         return res
+
+    async def get_balance(self) -> AccountBalance:
+        """
+        Retrieves the account balance.
+
+        Returns:
+            AccountBalance: The account balance.
+        """
+        url = f"/v1/accounts/{self.account_id}/balances"
+        response = await self.session.get(url)
+        return AccountBalance(
+            **response["balances"],
+        )

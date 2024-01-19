@@ -187,7 +187,9 @@ class AccountType(StrEnum):
     Attributes:
         cash (str): The account is a cash account.
         margin (str): The account is a margin account.
+        pdt (str): The account is a pattern day trader account.
     """
 
     cash = "cash"
     margin = "margin"
+    pdt = "pdt"
