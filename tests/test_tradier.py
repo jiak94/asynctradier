@@ -1788,3 +1788,232 @@ async def test_get_history_sanbox(mocker, tradier_client):
         await tradier_client.get_history()
     except APINotAvailable:
         assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_single(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "gainloss": {
+                "closed_position": {
+                    "close_date": "2018-10-31T00:00:00.000Z",
+                    "cost": 12.7,
+                    "gain_loss": -2.64,
+                    "gain_loss_percent": -20.7874,
+                    "open_date": "2018-06-19T00:00:00.000Z",
+                    "proceeds": 10.06,
+                    "quantity": 1.0,
+                    "symbol": "GE",
+                    "term": 134,
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    gainloss = await tradier_client.get_gainloss()
+    assert len(gainloss) == 1
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={"page": 1, "limit": 25, "sortBy": "closeDate", "sort": "desc"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_multiple(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "gainloss": {
+                "closed_position": [
+                    {
+                        "close_date": "2018-10-31T00:00:00.000Z",
+                        "cost": 12.7,
+                        "gain_loss": -2.64,
+                        "gain_loss_percent": -20.7874,
+                        "open_date": "2018-06-19T00:00:00.000Z",
+                        "proceeds": 10.06,
+                        "quantity": 1.0,
+                        "symbol": "GE",
+                        "term": 134,
+                    },
+                    {
+                        "close_date": "2018-10-31T00:00:00.000Z",
+                        "cost": 12.7,
+                        "gain_loss": -2.64,
+                        "gain_loss_percent": -20.7874,
+                        "open_date": "2018-06-19T00:00:00.000Z",
+                        "proceeds": 10.06,
+                        "quantity": 1.0,
+                        "symbol": "GE",
+                        "term": 134,
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    gainloss = await tradier_client.get_gainloss()
+    assert len(gainloss) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={"page": 1, "limit": 25, "sortBy": "closeDate", "sort": "desc"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_page(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_gainloss(page=10)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={"page": 10, "limit": 25, "sortBy": "closeDate", "sort": "desc"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_limit(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+    await tradier_client.get_gainloss(limit=10)
+
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={"page": 1, "limit": 10, "sortBy": "closeDate", "sort": "desc"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_sort_by(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(sort_by_close_date=True)
+    tradier_client.session.get.assert_called_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+        },
+    )
+
+    await tradier_client.get_gainloss(sort_by_close_date=False)
+    tradier_client.session.get.assert_called_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "openDate",
+            "sort": "desc",
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_sort(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(desc=True)
+    tradier_client.session.get.assert_called_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+        },
+    )
+
+    await tradier_client.get_gainloss(desc=False)
+    tradier_client.session.get.assert_called_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "asc",
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_start(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(start="2020-01-01")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+            "start": "2020-01-01",
+        },
+    )
+
+    try:
+        await tradier_client.get_gainloss(start="2020/01/01")
+    except InvalidDateFormat:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_end(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(end="2020-01-01")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+            "end": "2020-01-01",
+        },
+    )
+
+    try:
+        await tradier_client.get_gainloss(end="2020/01/01")
+    except InvalidDateFormat:
+        assert True
+
+
+@pytest.mark.asyncio()
+async def test_get_gainloss_symbol(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {"gainloss": {"closed_position": []}}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    await tradier_client.get_gainloss(symbol="AAPL")
+    tradier_client.session.get.assert_called_once_with(
+        f"/v1/accounts/{tradier_client.account_id}/gainloss",
+        params={
+            "page": 1,
+            "limit": 25,
+            "sortBy": "closeDate",
+            "sort": "desc",
+            "symbol": "AAPL",
+        },
+    )

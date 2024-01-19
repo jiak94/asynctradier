@@ -32,7 +32,9 @@ class Event:
         self.quantity = float(detail.get("quantity")) if detail.get("quantity") else 0.0
         self.symbol = detail.get("symbol")
         self.trade_type = (
-            TradeType(detail.get("trade_type")) if detail.get("trade_type") else None
+            TradeType(detail.get("trade_type").lower())
+            if detail.get("trade_type")
+            else None
         )
 
     def to_dict(self):

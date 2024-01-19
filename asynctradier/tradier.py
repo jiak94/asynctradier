@@ -14,6 +14,7 @@ from asynctradier.common import (
 from asynctradier.common.account_balance import AccountBalance
 from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
+from asynctradier.common.gain_loss import ProfitLoss
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.position import Position
@@ -699,6 +700,21 @@ class TradierClient:
         symbol: Optional[str] = None,
         exact_match: bool = False,
     ) -> List[Event]:
+        """
+        Retrieves the account history.
+
+        Args:
+            page (int, optional): The page number of the history to retrieve. Defaults to 1.
+            limit (int, optional): The number of events to retrieve per page. Defaults to 25.
+            event_type (EventType, optional): The type of event to retrieve. Defaults to None.
+            start (str, optional): The start date of the history to retrieve (YYYY-MM-DD). Defaults to None.
+            end (str, optional): The end date of the history to retrieve (YYYY-MM-DD). Defaults to None.
+            symbol (str, optional): The symbol of the event to retrieve. Defaults to None.
+            exact_match (bool, optional): Whether to perform an exact match on the symbol. Defaults to False.
+
+        Returns:
+            List[Event]: A list of Event objects representing the account history.
+        """
         if self.sandbox:
             raise APINotAvailable(
                 "please check the documentation for more details: https://documentation.tradier.com/brokerage-api/accounts/get-account-balance"
@@ -758,6 +774,90 @@ class TradierClient:
             results.append(
                 Event(
                     **event,
+                )
+            )
+
+        return results
+
+    async def get_gainloss(
+        self,
+        page: int = 1,
+        limit: int = 25,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        symbol: Optional[str] = None,
+        sort_by_close_date: bool = True,
+        desc: bool = True,
+    ) -> List[ProfitLoss]:
+        """
+        Retrieves the gain/loss information for closed positions within a specified date range.
+
+        Args:
+            page (int): The page number of the results to retrieve (default is 1).
+            limit (int): The maximum number of results per page (default is 25).
+            start (str, optional): The start date of the date range (format: "YYYY-MM-DD").
+            end (str, optional): The end date of the date range (format: "YYYY-MM-DD").
+            symbol (str, optional): The symbol of the positions to filter by.
+            sort_by_close_date (bool): Whether to sort the results by close date (default is False).
+            desc (bool): Whether to sort the results in descending order (default is True).
+
+        Returns:
+            List[ProfitLoss]: A list of ProfitLoss objects representing the gain/loss information.
+
+        Raises:
+            InvalidDateFormat: If the start or end date is not in the correct format.
+
+        """
+
+        if start is not None and not is_valid_expiration_date(start):
+            raise InvalidDateFormat(start)
+
+        if end is not None and not is_valid_expiration_date(end):
+            raise InvalidDateFormat(end)
+
+        if page is None or page < 1:
+            page = 1
+
+        if limit is None or limit < 1:
+            limit = 25
+
+        url = f"/v1/accounts/{self.account_id}/gainloss"
+
+        params = {
+            "page": page,
+            "limit": limit,
+            "sortBy": "closeDate" if sort_by_close_date else "openDate",
+            "sort": "desc" if desc else "asc",
+        }
+
+        if start is not None:
+            params["start"] = start
+
+        if end is not None:
+            params["end"] = end
+
+        if symbol is not None:
+            params["symbol"] = symbol
+
+        response = await self.session.get(url, params=params)
+
+        if response.get("gainloss") is None:
+            return []
+
+        if response["gainloss"].get("closed_position") is None:
+            return []
+
+        if not isinstance(response["gainloss"]["closed_position"], list):
+            positions = [response["gainloss"]["closed_position"]]
+        else:
+            positions = response["gainloss"]["closed_position"]
+
+        results: List[ProfitLoss] = []
+
+        for position in positions:
+            results.append(
+                ProfitLoss(
+                    **position,
                 )
             )
 

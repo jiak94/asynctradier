@@ -19,6 +19,7 @@ from asynctradier.common.account_balance import (
 )
 from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
+from asynctradier.common.gain_loss import ProfitLoss
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.quote import Quote
@@ -941,3 +942,55 @@ def test_journal():
     assert event.type == EventType.journal
     assert event.description == detail["journal"]["description"]
     assert event.quantity == detail["journal"]["quantity"]
+
+
+def test_gainloss_equity():
+    detail = {
+        "close_date": "2018-09-19T00:00:00.000Z",
+        "cost": 913.95,
+        "gain_loss": 6.05,
+        "gain_loss_percent": 0.662,
+        "open_date": "2018-09-18T00:00:00.000Z",
+        "proceeds": 920.0,
+        "quantity": 100.0,
+        "symbol": "SNAP",
+        "term": 1,
+    }
+
+    gainloss = ProfitLoss(**detail)
+
+    assert gainloss.close_date == detail["close_date"]
+    assert gainloss.cost == detail["cost"]
+    assert gainloss.gain_loss == detail["gain_loss"]
+    assert gainloss.gain_loss_percent == detail["gain_loss_percent"]
+    assert gainloss.open_date == detail["open_date"]
+    assert gainloss.proceeds == detail["proceeds"]
+    assert gainloss.quantity == detail["quantity"]
+    assert gainloss.symbol == detail["symbol"]
+    assert gainloss.term == detail["term"]
+
+
+def test_gainloss_option():
+    detail = {
+        "close_date": "2018-06-25T00:00:00.000Z",
+        "cost": 25.05,
+        "gain_loss": -25.05,
+        "gain_loss_percent": -100.0,
+        "open_date": "2018-06-22T00:00:00.000Z",
+        "proceeds": 0.0,
+        "quantity": 1.0,
+        "symbol": "SPY180625C00276000",
+        "term": 3,
+    }
+
+    gainloss = ProfitLoss(**detail)
+
+    assert gainloss.close_date == detail["close_date"]
+    assert gainloss.cost == detail["cost"]
+    assert gainloss.gain_loss == detail["gain_loss"]
+    assert gainloss.gain_loss_percent == detail["gain_loss_percent"]
+    assert gainloss.open_date == detail["open_date"]
+    assert gainloss.proceeds == detail["proceeds"]
+    assert gainloss.quantity == detail["quantity"]
+    assert gainloss.symbol == detail["symbol"]
+    assert gainloss.term == detail["term"]

@@ -237,5 +237,5 @@ class TradeType(StrEnum):
         sell (str): The trade is a sell trade.
     """
 
-    equity = "Equity"
-    option = "Option"
+    equity = "equity"
+    option = "option"
