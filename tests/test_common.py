@@ -17,6 +17,7 @@ from asynctradier.common.account_balance import (
     MarginAccountBalanceDetails,
     PDTAccountBalanceDetails,
 )
+from asynctradier.common.calendar import Calendar
 from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.gain_loss import ProfitLoss
@@ -994,3 +995,40 @@ def test_gainloss_option():
     assert gainloss.quantity == detail["quantity"]
     assert gainloss.symbol == detail["symbol"]
     assert gainloss.term == detail["term"]
+
+
+def test_calendar_closed():
+    detail = {
+        "date": "2024-01-01",
+        "status": "closed",
+        "description": "Market is closed for New Years Day",
+    }
+
+    calendar = Calendar(**detail)
+
+    assert calendar.date == detail["date"]
+    assert calendar.status == detail["status"]
+    assert calendar.description == detail["description"]
+
+
+def test_calendar_open():
+    detail = {
+        "date": "2024-01-02",
+        "status": "open",
+        "description": "Market is open",
+        "premarket": {"start": "07:00", "end": "09:24"},
+        "open": {"start": "09:30", "end": "16:00"},
+        "postmarket": {"start": "16:00", "end": "19:55"},
+    }
+
+    calendar = Calendar(**detail)
+
+    assert calendar.date == detail["date"]
+    assert calendar.status == detail["status"]
+    assert calendar.description == detail["description"]
+    assert calendar.premarket_start == detail["premarket"]["start"]
+    assert calendar.premarket_end == detail["premarket"]["end"]
+    assert calendar.regular_start == detail["open"]["start"]
+    assert calendar.regular_end == detail["open"]["end"]
+    assert calendar.postmarket_start == detail["postmarket"]["start"]
+    assert calendar.postmarket_end == detail["postmarket"]["end"]
