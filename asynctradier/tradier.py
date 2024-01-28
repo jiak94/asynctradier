@@ -866,6 +866,17 @@ class TradierClient:
         return results
 
     async def get_calendar(self, year: str, month: str) -> List[Calendar]:
+        """
+        Retrieves the calendar for a specific year and month.
+
+        Args:
+            year (str): The year in the format YYYY.
+            month (str): The month in the format MM.
+
+        Returns:
+            List[Calendar]: A list of Calendar objects representing the calendar for the specified year and month.
+        """
+
         if len(year) != 4:
             raise InvalidParameter("year must be in the format YYYY")
         if len(month) != 2:
