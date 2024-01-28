@@ -2,7 +2,6 @@
 This module defines the OptionContract class, which represents an option contract in a trading system.
 """
 
-
 from asynctradier.common import OptionType, OrderSide
 from asynctradier.exceptions import InvalidExiprationDate, InvalidOptionType
 from asynctradier.utils.common import build_option_symbol, is_valid_expiration_date
