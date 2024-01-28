@@ -79,7 +79,7 @@ if your are using poetry
 
 :white_square_button: Get Clock
 
-:white_square_button: Get Calendar
+:white_check_mark: Get Calendar
 
 :white_square_button: Search Companies
 

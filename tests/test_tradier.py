@@ -15,6 +15,7 @@ from asynctradier.exceptions import (
     APINotAvailable,
     InvalidDateFormat,
     InvalidExiprationDate,
+    InvalidParameter,
 )
 from asynctradier.tradier import TradierClient
 
@@ -2017,3 +2018,269 @@ async def test_get_gainloss_symbol(mocker, tradier_client):
             "symbol": "AAPL",
         },
     )
+
+
+@pytest.mark.asyncio()
+async def test_get_calendar(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {
+            "calendar": {
+                "month": 1,
+                "year": 2024,
+                "days": {
+                    "day": [
+                        {
+                            "date": "2024-01-01",
+                            "status": "closed",
+                            "description": "Market is closed for New Years Day",
+                        },
+                        {
+                            "date": "2024-01-02",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-03",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-04",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-05",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-06",
+                            "status": "closed",
+                            "description": "Market is closed",
+                        },
+                        {
+                            "date": "2024-01-07",
+                            "status": "closed",
+                            "description": "Market is closed",
+                        },
+                        {
+                            "date": "2024-01-08",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-09",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-10",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-11",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-12",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-13",
+                            "status": "closed",
+                            "description": "Market is closed",
+                        },
+                        {
+                            "date": "2024-01-14",
+                            "status": "closed",
+                            "description": "Market is closed",
+                        },
+                        {
+                            "date": "2024-01-15",
+                            "status": "closed",
+                            "description": "Market is closed for Martin Luther King, Jr. Day",
+                        },
+                        {
+                            "date": "2024-01-16",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-17",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-18",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-19",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-20",
+                            "status": "closed",
+                            "description": "Market is closed",
+                        },
+                        {
+                            "date": "2024-01-21",
+                            "status": "closed",
+                            "description": "Market is closed",
+                        },
+                        {
+                            "date": "2024-01-22",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-23",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-24",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-25",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-26",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-27",
+                            "status": "closed",
+                            "description": "Market is closed",
+                        },
+                        {
+                            "date": "2024-01-28",
+                            "status": "closed",
+                            "description": "Market is closed",
+                        },
+                        {
+                            "date": "2024-01-29",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-30",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                        {
+                            "date": "2024-01-31",
+                            "status": "open",
+                            "description": "Market is open",
+                            "premarket": {"start": "07:00", "end": "09:24"},
+                            "open": {"start": "09:30", "end": "16:00"},
+                            "postmarket": {"start": "16:00", "end": "19:55"},
+                        },
+                    ]
+                },
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    calendar = await tradier_client.get_calendar("2024", "01")
+    assert len(calendar) == 31
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/calendar",
+        params={"year": "2024", "month": "01"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_calendar_invalid_param(mocker, tradier_client):
+    def mock_get(path: str, params: dict = None):
+        return {}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    try:
+        await tradier_client.get_calendar("24", "13")
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_calendar("2024", "1")
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_calendar("2024", "13")
+    except InvalidParameter:
+        assert True

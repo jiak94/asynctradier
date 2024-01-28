@@ -1,6 +1,7 @@
 """
 This module defines the Order class, which represents an order in a trading system.
 """
+
 from asynctradier.common import Duration, OrderClass, OrderSide, OrderStatus, OrderType
 
 

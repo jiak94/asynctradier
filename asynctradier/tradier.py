@@ -1,5 +1,5 @@
 import json
-from typing import AsyncIterator, List, Optional
+from typing import AsyncIterator, Dict, List, Optional
 
 import websockets
 
@@ -12,6 +12,7 @@ from asynctradier.common import (
     OrderType,
 )
 from asynctradier.common.account_balance import AccountBalance
+from asynctradier.common.calendar import Calendar
 from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.gain_loss import ProfitLoss
@@ -363,7 +364,7 @@ class TradierClient:
             **order,
         )
 
-    async def _get_streaming_account_session(self) -> str:
+    async def _get_streaming_account_session(self) -> Dict[str, str]:
         """
         Get the streaming account session.
 
@@ -508,6 +509,7 @@ class TradierClient:
             symbol (str): The symbol.
             expiration_date (str): The expiration date (YYYY-MM-DD).
             greeks (bool, optional): Whether to include greeks in the response. Defaults to False.
+            option_type (OptionType, optional): Filter by option type. Defaults to None.
         """
         if not is_valid_expiration_date(expiration_date):
             raise InvalidExiprationDate(expiration_date)
@@ -858,6 +860,46 @@ class TradierClient:
             results.append(
                 ProfitLoss(
                     **position,
+                )
+            )
+
+        return results
+
+    async def get_calendar(self, year: str, month: str) -> List[Calendar]:
+        """
+        Retrieves the calendar for a specific year and month.
+
+        Args:
+            year (str): The year in the format YYYY.
+            month (str): The month in the format MM.
+
+        Returns:
+            List[Calendar]: A list of Calendar objects representing the calendar for the specified year and month.
+        """
+
+        if len(year) != 4:
+            raise InvalidParameter("year must be in the format YYYY")
+        if len(month) != 2:
+            raise InvalidParameter("month must be in the format MM")
+
+        if int(month) < 1 or int(month) > 12:
+            raise InvalidParameter("month must be between 1 and 12")
+
+        url = "/v1/markets/calendar"
+        params = {"year": year, "month": month}
+
+        response = await self.session.get(url, params=params)
+
+        if response.get("calendar") is None:
+            return []
+        details = response["calendar"]["days"]["day"]
+
+        results: List[Calendar] = []
+
+        for detail in details:
+            results.append(
+                Calendar(
+                    **detail,
                 )
             )
 

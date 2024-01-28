@@ -39,9 +39,9 @@ class UserAccount:
             "id": self.id,
             "name": self.name,
             "account_number": self.account_number,
-            "classification": self.classification.value
-            if self.classification
-            else None,
+            "classification": (
+                self.classification.value if self.classification else None
+            ),
             "date_created": self.date_created,
             "day_trader": self.day_trader,
             "option_level": self.option_level,

@@ -239,3 +239,16 @@ class TradeType(StrEnum):
 
     equity = "equity"
     option = "option"
+
+
+class MarketStatus(StrEnum):
+    """
+    Represents the status of the market.
+
+    Attributes:
+        open (str): The market is open.
+        closed (str): The market is closed.
+    """
+
+    open = "open"
+    closed = "closed"
