@@ -45,7 +45,7 @@ if your are using poetry
 
 :white_check_mark: Cancel Order
 
-:white_square_button: Place Equity Order
+:white_check_mark: Place Equity Order
 
 :white_check_mark: Place Option Order
 
