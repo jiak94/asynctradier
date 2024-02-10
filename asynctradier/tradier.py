@@ -96,6 +96,78 @@ class TradierClient:
             **order,
         )
 
+    async def buy_stock(
+        self,
+        symbol: str,
+        quantity: int,
+        order_type: OrderType = OrderType.market,
+        order_duration: Duration = Duration.day,
+        tag: Optional[str] = None,
+        price: Optional[float] = None,
+        stop: Optional[float] = None,
+    ):
+        """
+        Place a buy stock order.
+
+        Args:
+            symbol (str): The symbol of the stock.
+            quantity (int): The quantity of the stock to buy.
+            order_type (OrderType, optional): The type of the order. Defaults to OrderType.market.
+            order_duration (Duration, optional): The duration of the order. Defaults to Duration.day.
+            tag (str, optional): An optional tag for the order. Defaults to None.
+            price (float, optional): The price at which to place the order. Required for limit orders. Defaults to None.
+            stop (float, optional): The stop price for the order. Required for stop orders. Defaults to None.
+
+        Returns:
+            Order: The Order object.
+        """
+        return await self._stock_operation(
+            OrderSide.buy,
+            symbol,
+            quantity,
+            order_type,
+            order_duration,
+            tag,
+            price,
+            stop,
+        )
+
+    async def sell_stock(
+        self,
+        symbol: str,
+        quantity: int,
+        order_type: OrderType = OrderType.market,
+        order_duration: Duration = Duration.day,
+        tag: Optional[str] = None,
+        price: Optional[float] = None,
+        stop: Optional[float] = None,
+    ):
+        """
+        Sell a stock with the specified parameters.
+
+        Args:
+            symbol (str): The symbol of the stock to sell.
+            quantity (int): The quantity of shares to sell.
+            order_type (OrderType, optional): The type of order to place. Defaults to OrderType.market.
+            order_duration (Duration, optional): The duration of the order. Defaults to Duration.day.
+            tag (str, optional): An optional tag for the order. Defaults to None.
+            price (float, optional): The price at which to sell the stock. Defaults to None.
+            stop (float, optional): The stop price for a stop order. Defaults to None.
+
+        Returns:
+            The result of the stock operation.
+        """
+        return await self._stock_operation(
+            OrderSide.sell,
+            symbol,
+            quantity,
+            order_type,
+            order_duration,
+            tag,
+            price,
+            stop,
+        )
+
     async def buy_option(
         self,
         symbol: str,
@@ -139,6 +211,63 @@ class TradierClient:
             tag,
             price,
             stop,
+        )
+
+    async def _stock_operation(
+        self,
+        side: OrderSide,
+        symbol: str,
+        quantity: int,
+        order_type: OrderType = OrderType.market,
+        order_duration: Duration = Duration.day,
+        tag: Optional[str] = None,
+        price: Optional[float] = None,
+        stop: Optional[float] = None,
+    ):
+        """
+        Executes a stock operation, such as buying or selling a stock.
+
+        Args:
+            side (OrderSide): The side of the order, either 'buy' or 'sell'.
+            symbol (str): The symbol of the stock.
+            quantity (int): The quantity of the stock to buy or sell.
+            order_type (OrderType, optional): The type of the order. Defaults to OrderType.market.
+            order_duration (Duration, optional): The duration of the order. Defaults to Duration.day.
+            tag (str, optional): An optional tag for the order. Defaults to None.
+            price (float, optional): The price at which to execute the order. Required for limit orders. Defaults to None.
+            stop (float, optional): The stop price for stop orders. Required for stop orders. Defaults to None.
+
+        Raises:
+            MissingRequiredParameter: If price is not specified for limit orders or stop is not specified for stop orders.
+
+        Returns:
+            Order: The executed order.
+        """
+
+        if order_type == OrderType.limit and price is None:
+            raise MissingRequiredParameter("Price must be specified for limit orders")
+
+        if order_type == OrderType.stop and stop is None:
+            raise MissingRequiredParameter("Stop must be specified for stop orders")
+
+        url = f"/v1/accounts/{self.account_id}/orders"
+
+        params = {
+            "class": OrderClass.equity.value,
+            "symbol": symbol,
+            "side": side.value,
+            "quantity": str(quantity),
+            "type": order_type.value,
+            "duration": order_duration.value,
+            "price": str(price) if price is not None else "",
+            "stop": str(stop) if stop is not None else "",
+            "tag": tag,
+        }
+
+        response = await self.session.post(url, data=params)
+        order = response["order"]
+        return Order(
+            **order,
         )
 
     async def sell_option(

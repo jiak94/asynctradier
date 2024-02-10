@@ -16,6 +16,7 @@ from asynctradier.exceptions import (
     InvalidDateFormat,
     InvalidExiprationDate,
     InvalidParameter,
+    MissingRequiredParameter,
 )
 from asynctradier.tradier import TradierClient
 
@@ -2284,3 +2285,269 @@ async def test_get_calendar_invalid_param(mocker, tradier_client):
         await tradier_client.get_calendar("2024", "13")
     except InvalidParameter:
         assert True
+
+
+@pytest.mark.asyncio()
+async def test_buy_stock_market_order(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+
+    await tradier_client.buy_stock("AAPL", 100)
+
+    tradier_client.session.post.assert_called_once_with(
+        "/v1/accounts/account_id/orders",
+        data={
+            "class": "equity",
+            "symbol": "AAPL",
+            "side": "buy",
+            "quantity": "100",
+            "type": "market",
+            "duration": "day",
+            "price": "",
+            "stop": "",
+            "tag": None,
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_buy_stock_limit_order(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+
+    await tradier_client.buy_stock("AAPL", 100, OrderType.limit, price=100.1)
+
+    tradier_client.session.post.assert_called_once_with(
+        "/v1/accounts/account_id/orders",
+        data={
+            "class": "equity",
+            "symbol": "AAPL",
+            "side": "buy",
+            "quantity": "100",
+            "type": "limit",
+            "duration": "day",
+            "price": "100.1",
+            "stop": "",
+            "tag": None,
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_buy_stock_limit_order_no_price(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+    try:
+        await tradier_client.buy_stock("AAPL", 100, OrderType.limit)
+    except MissingRequiredParameter:
+        assert True
+
+    tradier_client.session.post.assert_not_called()
+
+
+@pytest.mark.asyncio()
+async def test_buy_stock_stop_order(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+
+    await tradier_client.buy_stock("AAPL", 100, OrderType.stop, stop=100.1)
+
+    tradier_client.session.post.assert_called_once_with(
+        "/v1/accounts/account_id/orders",
+        data={
+            "class": "equity",
+            "symbol": "AAPL",
+            "side": "buy",
+            "quantity": "100",
+            "type": "stop",
+            "duration": "day",
+            "price": "",
+            "stop": "100.1",
+            "tag": None,
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_buy_stock_stop_no_stop(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+    try:
+        await tradier_client.buy_stock("AAPL", 100, OrderType.stop)
+    except MissingRequiredParameter:
+        assert True
+
+    tradier_client.session.post.assert_not_called()
+
+
+@pytest.mark.asyncio()
+async def test_sell_stock_market_order(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+
+    await tradier_client.sell_stock("AAPL", 100)
+
+    tradier_client.session.post.assert_called_once_with(
+        "/v1/accounts/account_id/orders",
+        data={
+            "class": "equity",
+            "symbol": "AAPL",
+            "side": "sell",
+            "quantity": "100",
+            "type": "market",
+            "duration": "day",
+            "price": "",
+            "stop": "",
+            "tag": None,
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_sell_stock_limit_order(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+
+    await tradier_client.sell_stock("AAPL", 100, OrderType.limit, price=100.1)
+
+    tradier_client.session.post.assert_called_once_with(
+        "/v1/accounts/account_id/orders",
+        data={
+            "class": "equity",
+            "symbol": "AAPL",
+            "side": "sell",
+            "quantity": "100",
+            "type": "limit",
+            "duration": "day",
+            "price": "100.1",
+            "stop": "",
+            "tag": None,
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_sell_stock_limit_order_no_price(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+    try:
+        await tradier_client.sell_stock("AAPL", 100, OrderType.limit)
+    except MissingRequiredParameter:
+        assert True
+
+    tradier_client.session.post.assert_not_called()
+
+
+@pytest.mark.asyncio()
+async def test_sell_stock_stop_order(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+
+    await tradier_client.sell_stock("AAPL", 100, OrderType.stop, stop=100.1)
+
+    tradier_client.session.post.assert_called_once_with(
+        "/v1/accounts/account_id/orders",
+        data={
+            "class": "equity",
+            "symbol": "AAPL",
+            "side": "sell",
+            "quantity": "100",
+            "type": "stop",
+            "duration": "day",
+            "price": "",
+            "stop": "100.1",
+            "tag": None,
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_sell_stock_stop_no_stop(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "order": {
+                "id": 257459,
+                "status": "ok",
+                "partner_id": "c4998eb7-06e8-4820-a7ab-55d9760065fb",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
+    try:
+        await tradier_client.sell_stock("AAPL", 100, OrderType.stop)
+    except MissingRequiredParameter:
+        assert True
+
+    tradier_client.session.post.assert_not_called()
