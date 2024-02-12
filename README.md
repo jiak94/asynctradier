@@ -4,6 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/asynctradier.svg)](https://badge.fury.io/py/asynctradier)
 ![Test](https://github.com/jiak94/asynctradier/actions/workflows/run_test.yaml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/asynctradier/badge/?version=latest)](https://asynctradier.readthedocs.io/en/latest/?badge=latest)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/asynctradier)
 
 Async api wrapper for [Tradier](https://documentation.tradier.com/).
 
@@ -87,6 +88,6 @@ if your are using poetry
 
 ### Streaming
 
-:white_square_button: Market WebSocket
+:white_check_mark: Market WebSocket
 
 :white_check_mark: Account WebSocket
