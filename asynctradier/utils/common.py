@@ -59,3 +59,17 @@ def is_valid_option_type(option_type: str) -> bool:
         bool: True if the option type is valid, False otherwise.
     """
     return option_type.upper() in ("CALL", "PUT")
+
+
+def is_valid_datetime(datetime: str) -> bool:
+    """
+    Check if the given datetime is in the valid format.
+
+    Args:
+        datetime (str): The datetime to be checked.
+
+    Returns:
+        bool: True if the datetime is valid, False otherwise.
+    """
+    # valid datetime is YYYY-MM-DD HH:MM
+    return bool(re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", datetime))

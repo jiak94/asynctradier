@@ -2695,3 +2695,94 @@ async def test_get_historical_quotes_non_list(mocker, tradier_client):
     )
 
     assert len(response) == 1
+
+
+@pytest.mark.asyncio()
+async def test_get_time_and_sale(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "series": {
+                "data": [
+                    {
+                        "time": "2019-05-09T09:30:00",
+                        "timestamp": 1557408600,
+                        "price": 199.64499999999998,
+                        "open": 200.46,
+                        "high": 200.53,
+                        "low": 198.76,
+                        "close": 200.1154,
+                        "volume": 1273841,
+                        "vwap": 199.77806,
+                    },
+                    {
+                        "time": "2019-05-09T09:31:00",
+                        "timestamp": 1557408660,
+                        "price": 200.2,
+                        "open": 200.15,
+                        "high": 200.54,
+                        "low": 199.86,
+                        "close": 200.49,
+                        "volume": 228068,
+                        "vwap": 200.17588,
+                    },
+                    {
+                        "time": "2019-05-09T09:32:00",
+                        "timestamp": 1557408720,
+                        "price": 200.445,
+                        "open": 200.51,
+                        "high": 200.75,
+                        "low": 200.14,
+                        "close": 200.2,
+                        "volume": 277041,
+                        "vwap": 200.44681,
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.get_time_and_sales("AAPL")
+
+    assert len(response) == 3
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/timesales",
+        params={
+            "symbol": "AAPL",
+            "interval": "tick",
+            "start": None,
+            "end": None,
+            "session_filter": "all",
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_time_sale_invalid_param(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    try:
+        await tradier_client.get_time_and_sales("AAPL", interval="hourly")
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_time_and_sales("AAPL", session_filter="pre")
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_time_and_sales("AAPL", start="2019-01-01")
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_time_and_sales("AAPL", end="2019-01-01")
+    except InvalidParameter:
+        assert True
+
+    tradier_client.session.get.assert_not_called()

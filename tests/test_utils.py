@@ -1,5 +1,6 @@
 from asynctradier.utils.common import (
     build_option_symbol,
+    is_valid_datetime,
     is_valid_expiration_date,
     is_valid_option_type,
 )
@@ -37,3 +38,14 @@ def test_is_valid_option_type():
     assert is_valid_option_type("P") is False
     assert is_valid_option_type("c") is False
     assert is_valid_option_type("p") is False
+
+
+def test_is_valid_datetime():
+    d = "2021-01-15 12:00:00"
+    assert is_valid_datetime(d) is False
+    d = "2021-01-15T12:00:00"
+    assert is_valid_datetime(d) is False
+    d = "2021-01-15 12:00"
+    assert is_valid_datetime(d) is True
+    d = "2021-01-15T12:00"
+    assert is_valid_datetime(d) is False

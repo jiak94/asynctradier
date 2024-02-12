@@ -5,7 +5,7 @@ from asynctradier.common.calendar import Calendar
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.quote import Quote
 from asynctradier.exceptions import InvalidExiprationDate, InvalidParameter
-from asynctradier.utils.common import is_valid_expiration_date
+from asynctradier.utils.common import is_valid_datetime, is_valid_expiration_date
 from asynctradier.utils.webutils import WebUtil
 
 
@@ -298,4 +298,74 @@ class MarketDataClient:
                     **quote,
                 )
             )
+        return results
+
+    async def get_time_and_sales(
+        self,
+        symbol: str,
+        interval: str = "tick",
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        session_filter: str = "all",
+    ) -> List[Quote]:
+        """
+        Retrieves time and sales data for a given symbol within a specified interval.
+
+        Args:
+            symbol (str): The symbol for which to retrieve time and sales data.
+            interval (str, optional): The interval of the time and sales data. Defaults to "tick".
+            start (str, optional): The start date and time for the data retrieval. Format: "YYYY-MM-DD HH:MM". Defaults to None.
+            end (str, optional): The end date and time for the data retrieval. Format: "YYYY-MM-DD HH:MM". Defaults to None.
+            session_filter (str, optional): The session filter for the data retrieval. Must be one of "all" or "open". Defaults to "all".
+
+        Returns:
+            List[Quote]: A list of Quote objects representing the time and sales data.
+
+        Raises:
+            InvalidParameter: If the provided interval, session_filter, start date, or end date is invalid.
+        """
+
+        if interval not in ["tick", "1min", "5min", "15min", "30min", "hour"]:
+            raise InvalidParameter(
+                "interval must be one of tick, 1min, 5min, 15min, 30min, or hour"
+            )
+
+        if session_filter not in ["all", "open"]:
+            raise InvalidParameter("session_filter must be one of all or open")
+
+        if start and not is_valid_datetime(start):
+            raise InvalidParameter(
+                f"start date {start} is not valid. Valid values is: YYYY-MM-DD HH:MM"
+            )
+
+        if end and not is_valid_datetime(end):
+            raise InvalidParameter(
+                f"end date {end} is not valid. Valid values is: YYYY-MM-DD HH:MM"
+            )
+
+        url = "/v1/markets/timesales"
+
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+            "session_filter": session_filter,
+        }
+
+        response = await self.session.get(url, params=params)
+
+        results = []
+        quotes = response.get("series", {}).get("data", [])
+
+        if not isinstance(quotes, list):
+            quotes = [quotes]
+
+        for quote in quotes:
+            results.append(
+                Quote(
+                    **quote,
+                )
+            )
+
         return results
