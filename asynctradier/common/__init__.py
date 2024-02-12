@@ -273,7 +273,7 @@ class MarketStatus(StrEnum):
     closed = "closed"
 
 
-class ETBType(StrEnum):
+class SecurityType(StrEnum):
     stock = "stock"
     option = "option"
     etf = "etf"

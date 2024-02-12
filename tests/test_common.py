@@ -3,7 +3,6 @@ from asynctradier.common import (
     AccountType,
     Classification,
     Duration,
-    ETBType,
     EventType,
     MarketDataType,
     OptionType,
@@ -12,6 +11,7 @@ from asynctradier.common import (
     OrderStatus,
     OrderType,
     QuoteType,
+    SecurityType,
 )
 from asynctradier.common.account_balance import (
     AccountBalance,
@@ -20,7 +20,6 @@ from asynctradier.common.account_balance import (
     PDTAccountBalanceDetails,
 )
 from asynctradier.common.calendar import Calendar
-from asynctradier.common.etb import ETB
 from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.gain_loss import ProfitLoss
@@ -28,6 +27,7 @@ from asynctradier.common.market_data import MarketData
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.quote import Quote
+from asynctradier.common.security import Security
 from asynctradier.common.user_profile import UserAccount
 from asynctradier.exceptions import InvalidExiprationDate, InvalidOptionType
 
@@ -1261,9 +1261,9 @@ def test_etb():
         "description": "Steelcase Inc",
     }
 
-    etb = ETB(**detail)
+    etb = Security(**detail)
 
     assert etb.symbol == detail["symbol"]
     assert etb.exchange == detail["exchange"]
-    assert etb.type == ETBType.stock
+    assert etb.type == SecurityType.stock
     assert etb.description == detail["description"]

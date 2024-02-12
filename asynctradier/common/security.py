@@ -1,7 +1,7 @@
-from asynctradier.common import ETBType
+from asynctradier.common import SecurityType
 
 
-class ETB:
+class Security:
     """
     Represents an ETB (Exchange Traded Bond) object.
 
@@ -15,7 +15,7 @@ class ETB:
     def __init__(self, **kargs):
         self.symbol = kargs.get("symbol", None)
         self.description = kargs.get("description", None)
-        self.type = ETBType(kargs.get("type", None)) if kargs.get("type") else None
+        self.type = SecurityType(kargs.get("type", None)) if kargs.get("type") else None
         self.exchange = kargs.get("exchange", None)
 
     def to_dict(self):

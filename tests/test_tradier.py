@@ -2864,3 +2864,63 @@ async def test_get_etbs_singal_item(mocker, tradier_client):
     assert len(response) == 1
 
     tradier_client.session.get.assert_called_once_with("/v1/markets/etb")
+
+
+@pytest.mark.asyncio()
+async def test_search_symbols(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": [
+                    {
+                        "symbol": "GOOGL",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc",
+                    },
+                    {
+                        "symbol": "GOOG",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc. - Class C Capital Stock",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.search_symbols("GOO")
+
+    assert len(response) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/search",
+        params={"q": "GOO"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_search_symbols_single_item(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": {
+                    "symbol": "GOOGL",
+                    "exchange": "Q",
+                    "type": "stock",
+                    "description": "Alphabet Inc",
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.search_symbols("GOO")
+
+    assert len(response) == 1
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/search",
+        params={"q": "GOO"},
+    )

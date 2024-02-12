@@ -2,9 +2,9 @@ from typing import List, Optional
 
 from asynctradier.common import OptionType
 from asynctradier.common.calendar import Calendar
-from asynctradier.common.etb import ETB
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.quote import Quote
+from asynctradier.common.security import Security
 from asynctradier.exceptions import InvalidExiprationDate, InvalidParameter
 from asynctradier.utils.common import is_valid_datetime, is_valid_expiration_date
 from asynctradier.utils.webutils import WebUtil
@@ -371,7 +371,7 @@ class MarketDataClient:
 
         return results
 
-    async def get_etb_securities(self) -> List[ETB]:
+    async def get_etb_securities(self) -> List[Security]:
         """
         Retrieves a list of ETB (Exchange Traded Bond) securities.
 
@@ -391,8 +391,38 @@ class MarketDataClient:
 
         for etb in etbs:
             results.append(
-                ETB(
+                Security(
                     **etb,
                 )
             )
+        return results
+
+    async def search_symbols(self, query: str) -> List[Security]:
+        """
+        Search for symbols.
+
+        Args:
+            query (str): The query to search for.
+
+        Returns:
+            List[str]: A list of symbols matching the query.
+        """
+        url = "/v1/markets/search"
+        params = {"q": query}
+        response = await self.session.get(url, params=params)
+        if response.get("securities") is None:
+            return []
+        results = []
+
+        securities = response.get("securities", {}).get("security", [])
+        if not isinstance(securities, list):
+            securities = [securities]
+
+        for security in securities:
+            results.append(
+                Security(
+                    **security,
+                )
+            )
+
         return results
