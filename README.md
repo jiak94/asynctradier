@@ -74,9 +74,9 @@ if your are using poetry
 
 :white_check_mark: Get Historical Quotes
 
-:white_square_button: Get Time and Sales
+:white_check_mark: Get Time and Sales
 
-:white_square_button: Get ETB Securities
+:white_check_mark: Get ETB Securities
 
 :white_square_button: Get Clock
 

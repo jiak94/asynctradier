@@ -271,3 +271,11 @@ class MarketStatus(StrEnum):
 
     open = "open"
     closed = "closed"
+
+
+class ETBType(StrEnum):
+    stock = "stock"
+    option = "option"
+    etf = "etf"
+    index = "index"
+    mutual_fund = "mutual_fund"

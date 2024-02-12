@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from asynctradier.common import OptionType
 from asynctradier.common.calendar import Calendar
+from asynctradier.common.etb import ETB
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.quote import Quote
 from asynctradier.exceptions import InvalidExiprationDate, InvalidParameter
@@ -368,4 +369,30 @@ class MarketDataClient:
                 )
             )
 
+        return results
+
+    async def get_etb_securities(self) -> List[ETB]:
+        """
+        Retrieves a list of ETB (Exchange Traded Bond) securities.
+
+        Returns:
+            List[str]: A list of ETB securities.
+        """
+        url = "/v1/markets/etb"
+        response = await self.session.get(url)
+
+        if response.get("securities") is None:
+            return []
+
+        etbs = response.get("securities", {}).get("security", [])
+        results = []
+        if not isinstance(etbs, list):
+            etbs = [etbs]
+
+        for etb in etbs:
+            results.append(
+                ETB(
+                    **etb,
+                )
+            )
         return results

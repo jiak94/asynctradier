@@ -2786,3 +2786,81 @@ async def test_get_time_sale_invalid_param(mocker, tradier_client):
         assert True
 
     tradier_client.session.get.assert_not_called()
+
+
+@pytest.mark.asyncio()
+async def test_get_etb(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": [
+                    {
+                        "symbol": "SCS",
+                        "exchange": "N",
+                        "type": "stock",
+                        "description": "Steelcase Inc",
+                    },
+                    {
+                        "symbol": "EXAS",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Exact Sciences Corp",
+                    },
+                    {
+                        "symbol": "BBL",
+                        "exchange": "N",
+                        "type": "stock",
+                        "description": "BHP Group PlcSponsored ADR",
+                    },
+                    {
+                        "symbol": "WLH",
+                        "exchange": "N",
+                        "type": "stock",
+                        "description": "William Lyon Homes",
+                    },
+                    {
+                        "symbol": "IBKC",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "IBERIABANK Corp",
+                    },
+                    {
+                        "symbol": "BBT",
+                        "exchange": "N",
+                        "type": "stock",
+                        "description": "BB&T Corp",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.get_etb_securities()
+
+    assert len(response) == 6
+
+    tradier_client.session.get.assert_called_once_with("/v1/markets/etb")
+
+
+@pytest.mark.asyncio()
+async def test_get_etbs_singal_item(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": {
+                    "symbol": "SCS",
+                    "exchange": "N",
+                    "type": "stock",
+                    "description": "Steelcase Inc",
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.get_etb_securities()
+
+    assert len(response) == 1
+
+    tradier_client.session.get.assert_called_once_with("/v1/markets/etb")

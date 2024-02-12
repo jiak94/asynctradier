@@ -3,6 +3,7 @@ from asynctradier.common import (
     AccountType,
     Classification,
     Duration,
+    ETBType,
     EventType,
     MarketDataType,
     OptionType,
@@ -19,6 +20,7 @@ from asynctradier.common.account_balance import (
     PDTAccountBalanceDetails,
 )
 from asynctradier.common.calendar import Calendar
+from asynctradier.common.etb import ETB
 from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.gain_loss import ProfitLoss
@@ -1249,3 +1251,19 @@ def test_market_data_tradex():
         string
         == f"MarketData(type={detail['type']}, data=MarketDataTrade(symbol={detail['symbol']}, price={detail['price']}, size={detail['size']}))"
     )
+
+
+def test_etb():
+    detail = {
+        "symbol": "SCS",
+        "exchange": "N",
+        "type": "stock",
+        "description": "Steelcase Inc",
+    }
+
+    etb = ETB(**detail)
+
+    assert etb.symbol == detail["symbol"]
+    assert etb.exchange == detail["exchange"]
+    assert etb.type == ETBType.stock
+    assert etb.description == detail["description"]
