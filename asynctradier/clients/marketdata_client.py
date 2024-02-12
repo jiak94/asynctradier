@@ -254,3 +254,48 @@ class MarketDataClient:
             )
 
         return results
+
+    async def get_historical_quotes(
+        self, symbol: str, interval: str, start: str, end: str
+    ) -> List[Quote]:
+        """
+        Get historical quotes for a symbol.
+
+        Args:
+            symbol (str): The symbol.
+            interval (str): The interval for the historical quotes.
+            start (str): The start date (YYYY-MM-DD).
+            end (str): The end date (YYYY-MM-DD).
+        """
+        if interval not in ["daily", "weekly", "monthly"]:
+            raise InvalidParameter("interval must be one of daily, weekly, or monthly")
+
+        if not is_valid_expiration_date(start):
+            raise InvalidParameter(
+                f"start date {start} is not valid. Valid values is: YYYY-MM-DD"
+            )
+
+        if not is_valid_expiration_date(end):
+            raise InvalidParameter(
+                f"end date {end} is not valid. Valid values is: YYYY-MM-DD"
+            )
+        url = "/v1/markets/history"
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+        }
+        response = await self.session.get(url, params=params)
+
+        results = []
+        quotes = response.get("history", {}).get("day", [])
+        if not isinstance(quotes, list):
+            quotes = [quotes]
+        for quote in quotes:
+            results.append(
+                Quote(
+                    **quote,
+                )
+            )
+        return results

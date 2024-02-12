@@ -2,8 +2,7 @@ from asynctradier.clients.account_clients import AccountClient
 from asynctradier.clients.marketdata_client import MarketDataClient
 from asynctradier.clients.streaming_client import StreamingClient
 from asynctradier.clients.trading_client import TradingClient
-
-from .utils.webutils import WebUtil
+from asynctradier.utils.webutils import WebUtil
 
 
 class TradierClient(AccountClient, TradingClient, MarketDataClient, StreamingClient):

@@ -2563,7 +2563,7 @@ async def test_get_streaming_market_data_session(mocker, tradier_client):
             }
         }
 
-    mocker.patch.object(tradier_client.session, "post", return_value=mock_post)
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
 
     await tradier_client._get_streaming_market_data_session()
 
@@ -2580,8 +2580,118 @@ async def test_get_streaming_account_session(mocker, tradier_client):
             }
         }
 
-    mocker.patch.object(tradier_client.session, "post", return_value=mock_post)
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
 
     await tradier_client._get_streaming_account_session()
 
     tradier_client.session.post.assert_called_once_with("/v1/accounts/events/session")
+
+
+@pytest.mark.asyncio()
+async def test_get_historical_quotes(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "history": {
+                "day": [
+                    {
+                        "date": "2019-01-02",
+                        "open": 154.89,
+                        "high": 158.85,
+                        "low": 154.23,
+                        "close": 157.92,
+                        "volume": 37039737,
+                    },
+                    {
+                        "date": "2019-01-03",
+                        "open": 143.98,
+                        "high": 145.72,
+                        "low": 142.0,
+                        "close": 142.19,
+                        "volume": 91312195,
+                    },
+                    {
+                        "date": "2019-01-04",
+                        "open": 144.53,
+                        "high": 148.5499,
+                        "low": 143.8,
+                        "close": 148.26,
+                        "volume": 58607070,
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    quotes = await tradier_client.get_historical_quotes(
+        "AAPL", "daily", "2019-01-01", "2019-01-05"
+    )
+
+    assert len(quotes) == 3
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/history",
+        params={
+            "symbol": "AAPL",
+            "interval": "daily",
+            "start": "2019-01-01",
+            "end": "2019-01-05",
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_historical_quotes_invalid_param(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    try:
+        await tradier_client.get_historical_quotes(
+            "AAPL", "daily", "20190101", "2019-01-01"
+        )
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_historical_quotes(
+            "AAPL", "daily", "2019-01-01", "20190102"
+        )
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_historical_quotes(
+            "AAPL", "hourly", "2019-01-01", "2019-01-01"
+        )
+
+    except InvalidParameter:
+        assert True
+
+    tradier_client.session.get.assert_not_called()
+
+
+@pytest.mark.asyncio()
+async def test_get_historical_quotes_non_list(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "history": {
+                "day": {
+                    "date": "2019-01-02",
+                    "open": 154.89,
+                    "high": 158.85,
+                    "low": 154.23,
+                    "close": 157.92,
+                    "volume": 37039737,
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.get_historical_quotes(
+        "AAPL", "daily", "2019-01-01", "2019-01-05"
+    )
+
+    assert len(response) == 1

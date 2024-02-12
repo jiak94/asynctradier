@@ -72,7 +72,7 @@ if your are using poetry
 
 :white_check_mark: Lookup Option Symbols
 
-:white_square_button: Get Historical Quotes
+:white_check_mark: Get Historical Quotes
 
 :white_square_button: Get Time and Sales
 
