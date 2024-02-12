@@ -11,6 +11,7 @@ from asynctradier.common import (
     OrderStatus,
     OrderType,
     QuoteType,
+    SecurityType,
 )
 from asynctradier.common.account_balance import (
     AccountBalance,
@@ -26,6 +27,7 @@ from asynctradier.common.market_data import MarketData
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.quote import Quote
+from asynctradier.common.security import Security
 from asynctradier.common.user_profile import UserAccount
 from asynctradier.exceptions import InvalidExiprationDate, InvalidOptionType
 
@@ -1249,3 +1251,19 @@ def test_market_data_tradex():
         string
         == f"MarketData(type={detail['type']}, data=MarketDataTrade(symbol={detail['symbol']}, price={detail['price']}, size={detail['size']}))"
     )
+
+
+def test_etb():
+    detail = {
+        "symbol": "SCS",
+        "exchange": "N",
+        "type": "stock",
+        "description": "Steelcase Inc",
+    }
+
+    etb = Security(**detail)
+
+    assert etb.symbol == detail["symbol"]
+    assert etb.exchange == detail["exchange"]
+    assert etb.type == SecurityType.stock
+    assert etb.description == detail["description"]

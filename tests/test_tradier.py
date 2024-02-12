@@ -2563,7 +2563,7 @@ async def test_get_streaming_market_data_session(mocker, tradier_client):
             }
         }
 
-    mocker.patch.object(tradier_client.session, "post", return_value=mock_post)
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
 
     await tradier_client._get_streaming_market_data_session()
 
@@ -2580,8 +2580,456 @@ async def test_get_streaming_account_session(mocker, tradier_client):
             }
         }
 
-    mocker.patch.object(tradier_client.session, "post", return_value=mock_post)
+    mocker.patch.object(tradier_client.session, "post", side_effect=mock_post)
 
     await tradier_client._get_streaming_account_session()
 
     tradier_client.session.post.assert_called_once_with("/v1/accounts/events/session")
+
+
+@pytest.mark.asyncio()
+async def test_get_historical_quotes(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "history": {
+                "day": [
+                    {
+                        "date": "2019-01-02",
+                        "open": 154.89,
+                        "high": 158.85,
+                        "low": 154.23,
+                        "close": 157.92,
+                        "volume": 37039737,
+                    },
+                    {
+                        "date": "2019-01-03",
+                        "open": 143.98,
+                        "high": 145.72,
+                        "low": 142.0,
+                        "close": 142.19,
+                        "volume": 91312195,
+                    },
+                    {
+                        "date": "2019-01-04",
+                        "open": 144.53,
+                        "high": 148.5499,
+                        "low": 143.8,
+                        "close": 148.26,
+                        "volume": 58607070,
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    quotes = await tradier_client.get_historical_quotes(
+        "AAPL", "daily", "2019-01-01", "2019-01-05"
+    )
+
+    assert len(quotes) == 3
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/history",
+        params={
+            "symbol": "AAPL",
+            "interval": "daily",
+            "start": "2019-01-01",
+            "end": "2019-01-05",
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_historical_quotes_invalid_param(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    try:
+        await tradier_client.get_historical_quotes(
+            "AAPL", "daily", "20190101", "2019-01-01"
+        )
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_historical_quotes(
+            "AAPL", "daily", "2019-01-01", "20190102"
+        )
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_historical_quotes(
+            "AAPL", "hourly", "2019-01-01", "2019-01-01"
+        )
+
+    except InvalidParameter:
+        assert True
+
+    tradier_client.session.get.assert_not_called()
+
+
+@pytest.mark.asyncio()
+async def test_get_historical_quotes_non_list(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "history": {
+                "day": {
+                    "date": "2019-01-02",
+                    "open": 154.89,
+                    "high": 158.85,
+                    "low": 154.23,
+                    "close": 157.92,
+                    "volume": 37039737,
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.get_historical_quotes(
+        "AAPL", "daily", "2019-01-01", "2019-01-05"
+    )
+
+    assert len(response) == 1
+
+
+@pytest.mark.asyncio()
+async def test_get_time_and_sale(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "series": {
+                "data": [
+                    {
+                        "time": "2019-05-09T09:30:00",
+                        "timestamp": 1557408600,
+                        "price": 199.64499999999998,
+                        "open": 200.46,
+                        "high": 200.53,
+                        "low": 198.76,
+                        "close": 200.1154,
+                        "volume": 1273841,
+                        "vwap": 199.77806,
+                    },
+                    {
+                        "time": "2019-05-09T09:31:00",
+                        "timestamp": 1557408660,
+                        "price": 200.2,
+                        "open": 200.15,
+                        "high": 200.54,
+                        "low": 199.86,
+                        "close": 200.49,
+                        "volume": 228068,
+                        "vwap": 200.17588,
+                    },
+                    {
+                        "time": "2019-05-09T09:32:00",
+                        "timestamp": 1557408720,
+                        "price": 200.445,
+                        "open": 200.51,
+                        "high": 200.75,
+                        "low": 200.14,
+                        "close": 200.2,
+                        "volume": 277041,
+                        "vwap": 200.44681,
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.get_time_and_sales("AAPL")
+
+    assert len(response) == 3
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/timesales",
+        params={
+            "symbol": "AAPL",
+            "interval": "tick",
+            "start": None,
+            "end": None,
+            "session_filter": "all",
+        },
+    )
+
+
+@pytest.mark.asyncio()
+async def test_get_time_sale_invalid_param(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    try:
+        await tradier_client.get_time_and_sales("AAPL", interval="hourly")
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_time_and_sales("AAPL", session_filter="pre")
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_time_and_sales("AAPL", start="2019-01-01")
+    except InvalidParameter:
+        assert True
+
+    try:
+        await tradier_client.get_time_and_sales("AAPL", end="2019-01-01")
+    except InvalidParameter:
+        assert True
+
+    tradier_client.session.get.assert_not_called()
+
+
+@pytest.mark.asyncio()
+async def test_get_etb(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": [
+                    {
+                        "symbol": "SCS",
+                        "exchange": "N",
+                        "type": "stock",
+                        "description": "Steelcase Inc",
+                    },
+                    {
+                        "symbol": "EXAS",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Exact Sciences Corp",
+                    },
+                    {
+                        "symbol": "BBL",
+                        "exchange": "N",
+                        "type": "stock",
+                        "description": "BHP Group PlcSponsored ADR",
+                    },
+                    {
+                        "symbol": "WLH",
+                        "exchange": "N",
+                        "type": "stock",
+                        "description": "William Lyon Homes",
+                    },
+                    {
+                        "symbol": "IBKC",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "IBERIABANK Corp",
+                    },
+                    {
+                        "symbol": "BBT",
+                        "exchange": "N",
+                        "type": "stock",
+                        "description": "BB&T Corp",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.get_etb_securities()
+
+    assert len(response) == 6
+
+    tradier_client.session.get.assert_called_once_with("/v1/markets/etb")
+
+
+@pytest.mark.asyncio()
+async def test_get_etbs_singal_item(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": {
+                    "symbol": "SCS",
+                    "exchange": "N",
+                    "type": "stock",
+                    "description": "Steelcase Inc",
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.get_etb_securities()
+
+    assert len(response) == 1
+
+    tradier_client.session.get.assert_called_once_with("/v1/markets/etb")
+
+
+@pytest.mark.asyncio()
+async def test_search_symbols(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": [
+                    {
+                        "symbol": "GOOGL",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc",
+                    },
+                    {
+                        "symbol": "GOOG",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc. - Class C Capital Stock",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.search_companies("GOO")
+
+    assert len(response) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/search",
+        params={"q": "GOO", "indexes": "false"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_search_symbols_single_item(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": {
+                    "symbol": "GOOGL",
+                    "exchange": "Q",
+                    "type": "stock",
+                    "description": "Alphabet Inc",
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.search_companies("GOO", True)
+
+    assert len(response) == 1
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/search",
+        params={"q": "GOO", "indexes": "true"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_lookup_symbol(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": [
+                    {
+                        "symbol": "GOOGL",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc",
+                    },
+                    {
+                        "symbol": "GOOG",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc. - Class C Capital Stock",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.lookup_symbol("AAPL")
+
+    assert len(response) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/lookup",
+        params={"q": "AAPL"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_lookup_symbol_1(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": [
+                    {
+                        "symbol": "GOOGL",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc",
+                    },
+                    {
+                        "symbol": "GOOG",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc. - Class C Capital Stock",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.lookup_symbol("AAPL", exchanges="Q", types="stock")
+
+    assert len(response) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/lookup",
+        params={"q": "AAPL", "exchanges": "Q", "types": "stock"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_lookup_symbol_single_item(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": {
+                    "symbol": "GOOGL",
+                    "exchange": "Q",
+                    "type": "stock",
+                    "description": "Alphabet Inc",
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.lookup_symbol("AAPL")
+
+    assert len(response) == 1
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/lookup",
+        params={"q": "AAPL"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_lookup_symbol_invalid_parameter(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    try:
+        await tradier_client.lookup_symbol("AAPL", exchanges="K", types="future")
+    except InvalidParameter:
+        assert True
+
+    tradier_client.session.get.assert_not_called()

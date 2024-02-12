@@ -72,19 +72,19 @@ if your are using poetry
 
 :white_check_mark: Lookup Option Symbols
 
-:white_square_button: Get Historical Quotes
+:white_check_mark: Get Historical Quotes
 
-:white_square_button: Get Time and Sales
+:white_check_mark: Get Time and Sales
 
-:white_square_button: Get ETB Securities
+:white_check_mark: Get ETB Securities
 
 :white_square_button: Get Clock
 
 :white_check_mark: Get Calendar
 
-:white_square_button: Search Companies
+:white_check_mark: Search Companies
 
-:white_square_button: Lookup Symbol
+:white_check_mark: Lookup Symbol
 
 ### Streaming
 

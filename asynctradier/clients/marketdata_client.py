@@ -4,8 +4,9 @@ from asynctradier.common import OptionType
 from asynctradier.common.calendar import Calendar
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.quote import Quote
+from asynctradier.common.security import Security
 from asynctradier.exceptions import InvalidExiprationDate, InvalidParameter
-from asynctradier.utils.common import is_valid_expiration_date
+from asynctradier.utils.common import is_valid_datetime, is_valid_expiration_date
 from asynctradier.utils.webutils import WebUtil
 
 
@@ -250,6 +251,221 @@ class MarketDataClient:
             results.append(
                 Calendar(
                     **detail,
+                )
+            )
+
+        return results
+
+    async def get_historical_quotes(
+        self, symbol: str, interval: str, start: str, end: str
+    ) -> List[Quote]:
+        """
+        Get historical quotes for a symbol.
+
+        Args:
+            symbol (str): The symbol.
+            interval (str): The interval for the historical quotes.
+            start (str): The start date (YYYY-MM-DD).
+            end (str): The end date (YYYY-MM-DD).
+        """
+        if interval not in ["daily", "weekly", "monthly"]:
+            raise InvalidParameter("interval must be one of daily, weekly, or monthly")
+
+        if not is_valid_expiration_date(start):
+            raise InvalidParameter(
+                f"start date {start} is not valid. Valid values is: YYYY-MM-DD"
+            )
+
+        if not is_valid_expiration_date(end):
+            raise InvalidParameter(
+                f"end date {end} is not valid. Valid values is: YYYY-MM-DD"
+            )
+        url = "/v1/markets/history"
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+        }
+        response = await self.session.get(url, params=params)
+
+        results = []
+        quotes = response.get("history", {}).get("day", [])
+        if not isinstance(quotes, list):
+            quotes = [quotes]
+        for quote in quotes:
+            results.append(
+                Quote(
+                    **quote,
+                )
+            )
+        return results
+
+    async def get_time_and_sales(
+        self,
+        symbol: str,
+        interval: str = "tick",
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        session_filter: str = "all",
+    ) -> List[Quote]:
+        """
+        Retrieves time and sales data for a given symbol within a specified interval.
+
+        Args:
+            symbol (str): The symbol for which to retrieve time and sales data.
+            interval (str, optional): The interval of the time and sales data. Defaults to "tick".
+            start (str, optional): The start date and time for the data retrieval. Format: "YYYY-MM-DD HH:MM". Defaults to None.
+            end (str, optional): The end date and time for the data retrieval. Format: "YYYY-MM-DD HH:MM". Defaults to None.
+            session_filter (str, optional): The session filter for the data retrieval. Must be one of "all" or "open". Defaults to "all".
+
+        Returns:
+            List[Quote]: A list of Quote objects representing the time and sales data.
+
+        Raises:
+            InvalidParameter: If the provided interval, session_filter, start date, or end date is invalid.
+        """
+
+        if interval not in ["tick", "1min", "5min", "15min", "30min", "hour"]:
+            raise InvalidParameter(
+                "interval must be one of tick, 1min, 5min, 15min, 30min, or hour"
+            )
+
+        if session_filter not in ["all", "open"]:
+            raise InvalidParameter("session_filter must be one of all or open")
+
+        if start and not is_valid_datetime(start):
+            raise InvalidParameter(
+                f"start date {start} is not valid. Valid values is: YYYY-MM-DD HH:MM"
+            )
+
+        if end and not is_valid_datetime(end):
+            raise InvalidParameter(
+                f"end date {end} is not valid. Valid values is: YYYY-MM-DD HH:MM"
+            )
+
+        url = "/v1/markets/timesales"
+
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+            "session_filter": session_filter,
+        }
+
+        response = await self.session.get(url, params=params)
+
+        results = []
+        quotes = response.get("series", {}).get("data", [])
+
+        if not isinstance(quotes, list):
+            quotes = [quotes]
+
+        for quote in quotes:
+            results.append(
+                Quote(
+                    **quote,
+                )
+            )
+
+        return results
+
+    async def get_etb_securities(self) -> List[Security]:
+        """
+        Retrieves a list of ETB (Exchange Traded Bond) securities.
+
+        Returns:
+            List[str]: A list of ETB securities.
+        """
+        url = "/v1/markets/etb"
+        response = await self.session.get(url)
+
+        if response.get("securities") is None:
+            return []
+
+        etbs = response.get("securities", {}).get("security", [])
+        results = []
+        if not isinstance(etbs, list):
+            etbs = [etbs]
+
+        for etb in etbs:
+            results.append(
+                Security(
+                    **etb,
+                )
+            )
+        return results
+
+    async def search_companies(
+        self, query: str, indexes: bool = False
+    ) -> List[Security]:
+        """
+        Search for companies based on the given query.
+
+        Args:
+            query (str): The search query.
+            indexes (bool, optional): Whether to include indexes in the search results. Defaults to False.
+
+        Returns:
+            List[Security]: A list of Security objects representing the search results.
+        """
+        url = "/v1/markets/search"
+        params = {"q": query, "indexes": str(indexes).lower()}
+        response = await self.session.get(url, params=params)
+        if response.get("securities") is None:
+            return []
+        results = []
+
+        securities = response.get("securities", {}).get("security", [])
+        if not isinstance(securities, list):
+            securities = [securities]
+
+        for security in securities:
+            results.append(
+                Security(
+                    **security,
+                )
+            )
+
+        return results
+
+    async def lookup_symbol(
+        self, query: str, exchanges: Optional[str] = None, types: Optional[str] = None
+    ) -> List[Security]:
+        """
+        Search for companies based on the given query.
+
+        Args:
+            query (str): The search query.
+            exchanges (str, optional): The exchanges to search. Must be one of "Q" or "N". Defaults to None.
+            types (str, optional): The types of securities to search. Must be one of "stock", "option", "etf", or "index". Defaults to None.
+        Returns:
+            List[Security]: A list of Security objects representing the search results.
+        """
+        if exchanges and exchanges not in ["Q", "N"]:
+            raise InvalidParameter("exchanges must be one of Q or N")
+        if types and types not in ["stock", "option", "etf", "index"]:
+            raise InvalidParameter("types must be one of stock, option, etf, index")
+        url = "/v1/markets/lookup"
+        params = {"q": query}
+        if exchanges:
+            params["exchanges"] = exchanges
+        if types:
+            params["types"] = types
+        response = await self.session.get(url, params=params)
+        if response.get("securities") is None:
+            return []
+        results = []
+
+        securities = response.get("securities", {}).get("security", [])
+        if not isinstance(securities, list):
+            securities = [securities]
+
+        for security in securities:
+            results.append(
+                Security(
+                    **security,
                 )
             )
 

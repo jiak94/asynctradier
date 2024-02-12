@@ -75,6 +75,8 @@ class Quote:
         root_symbol (str, optional): The root symbol for an underlier.
         greeks (Greeks, optional): The Greeks values for options.
         note (str, optional): The note for the quote.
+        date (str, optional): The date of the quote.
+        vwap (float, optional): The volume-weighted average price of the financial instrument.
     """
 
     def __init__(self, **kwargs):
@@ -126,3 +128,5 @@ class Quote:
 
         self.greeks = Greeks(**kwargs.get("greeks")) if kwargs.get("greeks") else None
         self.note = kwargs.get("note", None)
+        self.date = kwargs.get("date", None)
+        self.vwap = kwargs.get("vwap", None)
