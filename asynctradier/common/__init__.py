@@ -113,6 +113,25 @@ class OrderStatus(StrEnum):
     ok = "ok"
 
 
+class MarketDataType(StrEnum):
+    """
+    Enum class representing different market data filters.
+
+    Possible values:
+    - trade: for trade data
+    - quote: for quote data
+    - summary: for summary data
+    - timesale: for timesale data
+    - tradex: for tradex data
+    """
+
+    trade = "trade"
+    quote = "quote"
+    summary = "summary"
+    timesale = "timesale"
+    tradex = "tradex"
+
+
 class QuoteType(StrEnum):
     """
     Represents the type of quote.

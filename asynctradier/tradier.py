@@ -6,6 +6,7 @@ import websockets
 from asynctradier.common import (
     Duration,
     EventType,
+    MarketDataType,
     OptionType,
     OrderClass,
     OrderSide,
@@ -16,6 +17,7 @@ from asynctradier.common.calendar import Calendar
 from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.gain_loss import ProfitLoss
+from asynctradier.common.market_data import MarketData
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.position import Position
@@ -504,6 +506,17 @@ class TradierClient:
         response = await self.session.post(url)
         return response
 
+    async def _get_streaming_market_data_session(self) -> Dict[str, str]:
+        """
+        Get the streaming quote session.
+
+        Returns:
+            str: The streaming quote session.
+        """
+        url = "/v1/markets/events/session"
+        response = await self.session.post(url)
+        return response
+
     async def stream_order(self, with_detail: bool = True) -> AsyncIterator[Order]:
         """
         Stream order events.
@@ -534,7 +547,55 @@ class TradierClient:
                         order_id = response["id"]
                         yield await self.get_order(order_id)
                     else:
-                        yield response
+                        yield Order(**response)
+
+    async def stream_market_data(
+        self,
+        symbols: List[str],
+        filters: List[MarketDataType] = None,
+        linebreak: bool = True,
+        valid_only: bool = True,
+        advanced_details: bool = True,
+    ) -> AsyncIterator[MarketData]:
+        """
+        Streams market data for the given symbols.
+
+        Args:
+            symbols (List[str]): The list of symbols to stream market data for.
+            filters (List[MarketDataType], optional): The list of market data types to filter. Defaults to None.
+            linebreak (bool, optional): Whether to include linebreaks in the streamed data. Defaults to True.
+            valid_only (bool, optional): Whether to include only valid market data. Defaults to True.
+            advanced_details (bool, optional): Whether to include advanced details in the market data. Defaults to True.
+
+        Yields:
+            MarketData: The streamed market data.
+
+        """
+
+        streaming_session = await self._get_streaming_market_data_session()
+        uri = "wss://ws.tradier.com/v1/markets/events"
+        session_id = streaming_session["stream"]["sessionid"]
+
+        if filters is None:
+            filters = []
+        filters.append(MarketDataType.trade)
+
+        async with websockets.connect(uri, ssl=True, compression=None) as websocket:
+            payload = {
+                "symbols": symbols,
+                "sessionid": session_id,
+                "linebreak": linebreak,
+                "filter": filters,
+                "validOnly": valid_only,
+                "advancedDetails": advanced_details,
+            }
+            payload = json.dumps(payload)
+
+            await websocket.send(payload)
+
+            while True:
+                response = json.loads(await websocket.recv())
+                yield MarketData(**response)
 
     async def multileg(
         self,
