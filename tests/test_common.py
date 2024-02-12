@@ -4,6 +4,7 @@ from asynctradier.common import (
     Classification,
     Duration,
     EventType,
+    MarketDataType,
     OptionType,
     OrderClass,
     OrderSide,
@@ -21,6 +22,7 @@ from asynctradier.common.calendar import Calendar
 from asynctradier.common.event import Event
 from asynctradier.common.expiration import Expiration
 from asynctradier.common.gain_loss import ProfitLoss
+from asynctradier.common.market_data import MarketData
 from asynctradier.common.option_contract import OptionContract
 from asynctradier.common.order import Order
 from asynctradier.common.quote import Quote
@@ -1032,3 +1034,218 @@ def test_calendar_open():
     assert calendar.regular_end == detail["open"]["end"]
     assert calendar.postmarket_start == detail["postmarket"]["start"]
     assert calendar.postmarket_end == detail["postmarket"]["end"]
+
+
+def test_market_data_quote():
+    detail = {
+        "type": "quote",
+        "symbol": "SPY",
+        "bid": 281.84,
+        "bidsz": 60,
+        "bidexch": "M",
+        "biddate": "1557757189000",
+        "ask": 281.85,
+        "asksz": 6,
+        "askexch": "Z",
+        "askdate": "1557757190000",
+    }
+
+    market_data = MarketData(**detail)
+
+    assert market_data.type == MarketDataType.quote
+    assert market_data.data.symbol == detail["symbol"]
+    assert market_data.data.bid == detail["bid"]
+    assert market_data.data.bidsz == detail["bidsz"]
+    assert market_data.data.bidexch == detail["bidexch"]
+    assert market_data.data.biddate == detail["biddate"]
+    assert market_data.data.ask == detail["ask"]
+    assert market_data.data.asksz == detail["asksz"]
+    assert market_data.data.askexch == detail["askexch"]
+    assert market_data.data.askdate == detail["askdate"]
+
+    dictionary = market_data.to_dict()
+    assert dictionary["type"] == detail["type"]
+    assert dictionary["data"]["symbol"] == detail["symbol"]
+    assert dictionary["data"]["bid"] == detail["bid"]
+    assert dictionary["data"]["bidsz"] == detail["bidsz"]
+    assert dictionary["data"]["bidexch"] == detail["bidexch"]
+    assert dictionary["data"]["biddate"] == detail["biddate"]
+    assert dictionary["data"]["ask"] == detail["ask"]
+    assert dictionary["data"]["asksz"] == detail["asksz"]
+    assert dictionary["data"]["askexch"] == detail["askexch"]
+    assert dictionary["data"]["askdate"] == detail["askdate"]
+
+    string = market_data.to_string()
+    assert (
+        string
+        == f"MarketData(type={detail['type']}, data=MarketDataQuote(symbol={detail['symbol']}, bid={detail['bid']}, ask={detail['ask']}))"
+    )
+
+
+def test_market_data_trade():
+    detail = {
+        "type": "trade",
+        "symbol": "SPY",
+        "exch": "J",
+        "price": "281.85",
+        "size": "100",
+        "cvol": "27978993",
+        "date": "1557757190000",
+        "last": "281.85",
+    }
+
+    market_data = MarketData(**detail)
+
+    assert market_data.type == MarketDataType.trade
+    assert market_data.data.symbol == detail["symbol"]
+    assert market_data.data.exch == detail["exch"]
+    assert market_data.data.price == detail["price"]
+    assert market_data.data.size == detail["size"]
+    assert market_data.data.cvol == detail["cvol"]
+    assert market_data.data.date == detail["date"]
+    assert market_data.data.last == detail["last"]
+
+    dictionary = market_data.to_dict()
+    assert dictionary["type"] == detail["type"]
+    assert dictionary["data"]["symbol"] == detail["symbol"]
+    assert dictionary["data"]["exch"] == detail["exch"]
+    assert dictionary["data"]["price"] == detail["price"]
+    assert dictionary["data"]["size"] == detail["size"]
+    assert dictionary["data"]["cvol"] == detail["cvol"]
+    assert dictionary["data"]["date"] == detail["date"]
+    assert dictionary["data"]["last"] == detail["last"]
+
+    string = market_data.to_string()
+    assert (
+        string
+        == f"MarketData(type={detail['type']}, data=MarketDataTrade(symbol={detail['symbol']}, price={detail['price']}, size={detail['size']}))"
+    )
+
+
+def test_market_data_timesale():
+    detail = {
+        "type": "timesale",
+        "symbol": "SPY",
+        "exch": "Q",
+        "bid": "282.08",
+        "ask": "282.09",
+        "last": "282.09",
+        "size": "100",
+        "date": "1557758874355",
+        "seq": 352795,
+        "flag": "",
+        "cancel": False,
+        "correction": False,
+        "session": "normal",
+    }
+
+    market_data = MarketData(**detail)
+
+    assert market_data.type == MarketDataType.timesale
+    assert market_data.data.symbol == detail["symbol"]
+    assert market_data.data.exch == detail["exch"]
+    assert market_data.data.bid == detail["bid"]
+    assert market_data.data.ask == detail["ask"]
+    assert market_data.data.last == detail["last"]
+    assert market_data.data.size == detail["size"]
+    assert market_data.data.date == detail["date"]
+    assert market_data.data.seq == detail["seq"]
+    assert market_data.data.flag == detail["flag"]
+    assert market_data.data.cancel == detail["cancel"]
+    assert market_data.data.correction == detail["correction"]
+    assert market_data.data.session == detail["session"]
+
+    dictionary = market_data.to_dict()
+    assert dictionary["type"] == detail["type"]
+    assert dictionary["data"]["symbol"] == detail["symbol"]
+    assert dictionary["data"]["exch"] == detail["exch"]
+    assert dictionary["data"]["bid"] == detail["bid"]
+    assert dictionary["data"]["ask"] == detail["ask"]
+    assert dictionary["data"]["last"] == detail["last"]
+    assert dictionary["data"]["size"] == detail["size"]
+    assert dictionary["data"]["date"] == detail["date"]
+    assert dictionary["data"]["seq"] == detail["seq"]
+    assert dictionary["data"]["flag"] == detail["flag"]
+    assert dictionary["data"]["cancel"] == detail["cancel"]
+    assert dictionary["data"]["correction"] == detail["correction"]
+    assert dictionary["data"]["session"] == detail["session"]
+
+    string = market_data.to_string()
+    assert (
+        string
+        == f"MarketData(type={detail['type']}, data=MarketDataTimesale(symbol={detail['symbol']}, last={detail['last']}, size={detail['size']}))"
+    )
+
+
+def test_market_data_summary():
+    detail = {
+        "type": "summary",
+        "symbol": "SPY",
+        "open": "282.42",
+        "high": "283.49",
+        "low": "281.07",
+        "prevClose": "288.1",
+    }
+
+    market_data = MarketData(**detail)
+
+    assert market_data.type == MarketDataType.summary
+    assert market_data.data.symbol == detail["symbol"]
+    assert market_data.data.open == detail["open"]
+    assert market_data.data.high == detail["high"]
+    assert market_data.data.low == detail["low"]
+    assert market_data.data.prev_close == detail["prevClose"]
+
+    dictionary = market_data.to_dict()
+    assert dictionary["type"] == detail["type"]
+    assert dictionary["data"]["symbol"] == detail["symbol"]
+    assert dictionary["data"]["open"] == detail["open"]
+    assert dictionary["data"]["high"] == detail["high"]
+    assert dictionary["data"]["low"] == detail["low"]
+    assert dictionary["data"]["prev_close"] == detail["prevClose"]
+
+    string = market_data.to_string()
+    assert (
+        string
+        == f"MarketData(type={detail['type']}, data=MarketDataSummary(symbol={detail['symbol']}, open={detail['open']}, high={detail['high']}, low={detail['low']}))"
+    )
+
+
+def test_market_data_tradex():
+    detail = {
+        "type": "tradex",
+        "symbol": "SPY",
+        "exch": "J",
+        "price": "281.85",
+        "size": "100",
+        "cvol": "27978993",
+        "date": "1557757190000",
+        "last": "281.85",
+    }
+
+    market_data = MarketData(**detail)
+
+    assert market_data.type == MarketDataType.tradex
+    assert market_data.data.symbol == detail["symbol"]
+    assert market_data.data.exch == detail["exch"]
+    assert market_data.data.price == detail["price"]
+    assert market_data.data.size == detail["size"]
+    assert market_data.data.cvol == detail["cvol"]
+    assert market_data.data.date == detail["date"]
+    assert market_data.data.last == detail["last"]
+
+    dictionary = market_data.to_dict()
+    assert dictionary["type"] == detail["type"]
+    assert dictionary["data"]["symbol"] == detail["symbol"]
+    assert dictionary["data"]["exch"] == detail["exch"]
+    assert dictionary["data"]["price"] == detail["price"]
+    assert dictionary["data"]["size"] == detail["size"]
+    assert dictionary["data"]["cvol"] == detail["cvol"]
+    assert dictionary["data"]["date"] == detail["date"]
+    assert dictionary["data"]["last"] == detail["last"]
+
+    string = market_data.to_string()
+    assert (
+        string
+        == f"MarketData(type={detail['type']}, data=MarketDataTrade(symbol={detail['symbol']}, price={detail['price']}, size={detail['size']}))"
+    )
