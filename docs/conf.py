@@ -19,7 +19,7 @@ author = "Jiakuan Li"
 sys.path.insert(0, os.path.abspath(".."))
 apidoc_module_dir = "../asynctradier"
 apidoc_output_dir = "python_apis"
-# apidoc_excluded_paths = ['tests']
+apidoc_excluded_paths = ["tests"]
 apidoc_separate_modules = True
 extensions = [
     "sphinx.ext.autodoc",
