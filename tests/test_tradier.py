@@ -2551,3 +2551,37 @@ async def test_sell_stock_stop_no_stop(mocker, tradier_client):
         assert True
 
     tradier_client.session.post.assert_not_called()
+
+
+@pytest.mark.asyncio()
+async def test_get_streaming_market_data_session(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "stream": {
+                "url": "https://stream.tradier.com/v1/markets/events",
+                "sessionid": "c8638963-a6d4-4fb9-9bc6-e25fbd8c60c3",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", return_value=mock_post)
+
+    await tradier_client._get_streaming_market_data_session()
+
+    tradier_client.session.post.assert_called_once_with("/v1/markets/events/session")
+
+
+@pytest.mark.asyncio()
+async def test_get_streaming_account_session(mocker, tradier_client):
+    def mock_post(path: str, data: dict = None):
+        return {
+            "stream": {
+                "url": "wss://ws.tradier.com/v1/accounts/events",
+                "sessionid": "c8638963-a6d4-4fb9-9bc6-e25fbd8c60c3",
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "post", return_value=mock_post)
+
+    await tradier_client._get_streaming_account_session()
+
+    tradier_client.session.post.assert_called_once_with("/v1/accounts/events/session")
