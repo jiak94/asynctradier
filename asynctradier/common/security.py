@@ -39,7 +39,7 @@ class Security:
         Returns:
             str: A string representation of the ETB object.
         """
-        return f"ETB(symbol={self.symbol}, description={self.description}, type={self.type.value if self.type else None}, exchange={self.exchange})"
+        return f"Security(symbol={self.symbol}, description={self.description}, type={self.type.value if self.type else None}, exchange={self.exchange})"
 
     def __repr__(self):
         """

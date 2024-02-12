@@ -82,9 +82,9 @@ if your are using poetry
 
 :white_check_mark: Get Calendar
 
-:white_square_button: Search Companies
+:white_check_mark: Search Companies
 
-:white_square_button: Lookup Symbol
+:white_check_mark: Lookup Symbol
 
 ### Streaming
 

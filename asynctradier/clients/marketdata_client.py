@@ -397,18 +397,62 @@ class MarketDataClient:
             )
         return results
 
-    async def search_symbols(self, query: str) -> List[Security]:
+    async def search_companies(
+        self, query: str, indexes: bool = False
+    ) -> List[Security]:
         """
-        Search for symbols.
+        Search for companies based on the given query.
 
         Args:
-            query (str): The query to search for.
+            query (str): The search query.
+            indexes (bool, optional): Whether to include indexes in the search results. Defaults to False.
 
         Returns:
-            List[str]: A list of symbols matching the query.
+            List[Security]: A list of Security objects representing the search results.
         """
         url = "/v1/markets/search"
+        params = {"q": query, "indexes": str(indexes).lower()}
+        response = await self.session.get(url, params=params)
+        if response.get("securities") is None:
+            return []
+        results = []
+
+        securities = response.get("securities", {}).get("security", [])
+        if not isinstance(securities, list):
+            securities = [securities]
+
+        for security in securities:
+            results.append(
+                Security(
+                    **security,
+                )
+            )
+
+        return results
+
+    async def lookup_symbol(
+        self, query: str, exchanges: Optional[str] = None, types: Optional[str] = None
+    ) -> List[Security]:
+        """
+        Search for companies based on the given query.
+
+        Args:
+            query (str): The search query.
+            exchanges (str, optional): The exchanges to search. Must be one of "Q" or "N". Defaults to None.
+            types (str, optional): The types of securities to search. Must be one of "stock", "option", "etf", or "index". Defaults to None.
+        Returns:
+            List[Security]: A list of Security objects representing the search results.
+        """
+        if exchanges and exchanges not in ["Q", "N"]:
+            raise InvalidParameter("exchanges must be one of Q or N")
+        if types and types not in ["stock", "option", "etf", "index"]:
+            raise InvalidParameter("types must be one of stock, option, etf, index")
+        url = "/v1/markets/lookup"
         params = {"q": query}
+        if exchanges:
+            params["exchanges"] = exchanges
+        if types:
+            params["types"] = types
         response = await self.session.get(url, params=params)
         if response.get("securities") is None:
             return []

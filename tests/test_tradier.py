@@ -2890,13 +2890,13 @@ async def test_search_symbols(mocker, tradier_client):
 
     mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
 
-    response = await tradier_client.search_symbols("GOO")
+    response = await tradier_client.search_companies("GOO")
 
     assert len(response) == 2
 
     tradier_client.session.get.assert_called_once_with(
         "/v1/markets/search",
-        params={"q": "GOO"},
+        params={"q": "GOO", "indexes": "false"},
     )
 
 
@@ -2916,11 +2916,120 @@ async def test_search_symbols_single_item(mocker, tradier_client):
 
     mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
 
-    response = await tradier_client.search_symbols("GOO")
+    response = await tradier_client.search_companies("GOO", True)
 
     assert len(response) == 1
 
     tradier_client.session.get.assert_called_once_with(
         "/v1/markets/search",
-        params={"q": "GOO"},
+        params={"q": "GOO", "indexes": "true"},
     )
+
+
+@pytest.mark.asyncio()
+async def test_lookup_symbol(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": [
+                    {
+                        "symbol": "GOOGL",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc",
+                    },
+                    {
+                        "symbol": "GOOG",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc. - Class C Capital Stock",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.lookup_symbol("AAPL")
+
+    assert len(response) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/lookup",
+        params={"q": "AAPL"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_lookup_symbol_1(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": [
+                    {
+                        "symbol": "GOOGL",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc",
+                    },
+                    {
+                        "symbol": "GOOG",
+                        "exchange": "Q",
+                        "type": "stock",
+                        "description": "Alphabet Inc. - Class C Capital Stock",
+                    },
+                ]
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.lookup_symbol("AAPL", exchanges="Q", types="stock")
+
+    assert len(response) == 2
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/lookup",
+        params={"q": "AAPL", "exchanges": "Q", "types": "stock"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_lookup_symbol_single_item(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {
+            "securities": {
+                "security": {
+                    "symbol": "GOOGL",
+                    "exchange": "Q",
+                    "type": "stock",
+                    "description": "Alphabet Inc",
+                }
+            }
+        }
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    response = await tradier_client.lookup_symbol("AAPL")
+
+    assert len(response) == 1
+
+    tradier_client.session.get.assert_called_once_with(
+        "/v1/markets/lookup",
+        params={"q": "AAPL"},
+    )
+
+
+@pytest.mark.asyncio()
+async def test_lookup_symbol_invalid_parameter(mocker, tradier_client):
+    def mock_get(url: str, params: dict = None):
+        return {}
+
+    mocker.patch.object(tradier_client.session, "get", side_effect=mock_get)
+
+    try:
+        await tradier_client.lookup_symbol("AAPL", exchanges="K", types="future")
+    except InvalidParameter:
+        assert True
+
+    tradier_client.session.get.assert_not_called()
